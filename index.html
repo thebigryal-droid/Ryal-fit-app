@@ -21,8 +21,7 @@
         /* --- Smooth UI Animations & Hover States --- */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* --- NEW CONTINUOUS GALLERY ANIMATION --- */
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes floatWave {
             0%, 100% { transform: translateY(0); box-shadow: 0 0 0 rgba(0,0,0,0); }
             50% { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -101,20 +100,20 @@
         #vipPortal { display: none; background: var(--bg); color: var(--text); min-height: 100vh; padding: 30px 20px; }
         .vip-card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); animation: fadeUp 0.5s ease-out forwards; }
         
-        /* --- NEW DYNAMIC GALLERY STYLES --- */
         .gallery-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 25px; padding-top: 15px; margin-top: 10px; scroll-behavior: smooth; align-items: center; }
-        .gallery-item { 
-            flex: 0 0 120px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 5px; position: relative; 
-            transition: border-color 0.3s, filter 0.3s;
-        }
-        
-        /* Stops floating when you touch/hover over it so you can click the delete button easily */
+        .gallery-item { flex: 0 0 120px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 5px; position: relative; transition: border-color 0.3s, filter 0.3s; }
         .gallery-item:hover { filter: brightness(1.05); border-color: var(--info); z-index: 10; animation-play-state: paused !important; }
         .gallery-img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
         .gallery-date { font-size: 9px; font-weight: 700; color: #86868b; text-align: center; margin-top: 5px; transition: color 0.3s; }
         .gallery-item:hover .gallery-date { color: var(--info); }
         .gallery-del { position: absolute; top: -8px; right: -8px; background: rgba(255,59,48,0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .gallery-del:hover { transform: scale(1.15); background: #ff3b30; }
+
+        /* --- NEW: CLEAN APP FOOTER --- */
+        .app-footer { text-align: center; padding: 40px 10px 20px; margin-top: 20px; border-top: 1px solid var(--border); color: #86868b; animation: fadeUp 0.5s ease-out forwards; }
+        .app-footer .branding { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: -0.3px; }
+        .app-footer .details { font-size: 11px; font-weight: 500; }
+        .app-footer .version { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-top: 12px; opacity: 0.6; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -245,4 +244,917 @@
                     <select id="regLevel"><option value="Beginner">Beginner</option><option value="Intermediate">Intermediate</option><option value="Advanced">Advanced</option></select>
                 </div>
                 <div style="flex:1"><label>Start Date</label><input type="date" id="regStart"></div>
+            </div>
+            <div style="display:flex; gap:10px;"><div style="flex:1"><label>End Date</label><input type="date" id="regEnd"></div><div style="flex:1"><label>Total Sessions</label><input type="number" id="regSess" placeholder="Qty"></div></div>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1"><label>Package ₹</label><input type="number" id="regPay" placeholder="Amount"></div>
+                <div style="flex:1"><label>Retention %</label><select id="regRet"><option value="0.40" selected>40%</option><option value="0.45">45%</option><option value="0.50">50%</option><option value="1">100%</option></select></div>
+            </div>
+            <div style="margin-bottom:10px;"><label>GST %</label><select id="regGst"><option value="0">0%</option><option value="0.05">5%</option><option value="0.18">18%</option></select></div>
+            <button class="btn-main" onclick="regClient()"><i data-feather="user-plus" class="icon"></i> Create Official Profile</button>
+        </div>
+    </div>
+
+    <div class="section active" id="sec-rost" style="animation-delay: 0.35s;">
+        <h2 onclick="toggleSec('sec-rost')">
+            <span style="display:flex; align-items:center;"><i data-feather="clipboard" class="icon" style="color:var(--info); margin-right:8px;"></i> Active Roster</span>
+            <i data-feather="chevron-down" class="chevron"></i>
+        </h2>
+        <div class="collapsible">
+            <table id="rosterTable">
+                <thead><tr><th>Client</th><th>Slot</th><th>Prog</th><th>Action</th></tr></thead>
+                <tbody id="rosterView"></tbody>
+            </table>
+        </div>
+    </div>
     
+    <footer class="app-footer">
+        <div class="branding"><i data-feather="cpu" class="icon" style="color:var(--info);"></i> Ryal FitHub Pro</div>
+        <div class="details">Engineered for Abis Rizvi &bull; Kenzo Fitness</div>
+        <div class="version">Clinical Engine v9.0 &copy; 2026</div>
+    </footer>
+    
+</div>
+
+<div id="clientOverlay">
+    <button class="btn-sub" onclick="document.getElementById('clientOverlay').style.display='none'" style="margin-bottom:15px;"><i data-feather="arrow-left" class="icon"></i> Dashboard</button>
+    
+    <div style="display:flex; gap:10px;">
+        <button class="btn-wa" style="flex:1;" onclick="sendWaReminder()"><i data-feather="bell" class="icon"></i> Reminder</button>
+        <button class="btn-pdf" style="flex:1;" onclick="generateProgressPDF()"><i data-feather="file-text" class="icon"></i> Print Report</button>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 15px 0 5px 0;">
+        <h1 id="ovName" style="margin:0; font-size:24px; font-weight:800; letter-spacing:-0.5px;">Name</h1>
+        <div style="position:relative;">
+            <button onclick="document.getElementById('clientMenu').style.display = document.getElementById('clientMenu').style.display === 'block' ? 'none' : 'block'" style="background:none; border:none; color:var(--text); cursor:pointer;"><i data-feather="more-vertical" class="icon-lg"></i></button>
+            <div id="clientMenu" style="display:none; position:absolute; right:0; top:30px; background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); padding:8px; z-index:100; min-width:160px; animation: fadeUp 0.2s ease-out;">
+                <button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:10px; font-size:13px; margin-bottom:5px; font-weight:600; color:var(--text); cursor:pointer;" onclick="showEditForm()"><i data-feather="edit-2" class="icon"></i> Edit Profile</button>
+                <button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:10px; font-size:13px; margin-bottom:5px; font-weight:600; color:var(--info); cursor:pointer;" onclick="generateVIPLink()"><i data-feather="link" class="icon"></i> Copy VIP Link</button>
+                <button class="btn-danger" style="width:100%; padding:10px; font-size:13px; font-weight:600; cursor:pointer;" onclick="deleteCurrentClient()"><i data-feather="trash-2" class="icon"></i> Delete Client</button>
+            </div>
+        </div>
+    </div>
+
+    <p id="ovTags" style="font-size:12px; color:#86868b; font-weight:600; text-transform:uppercase; margin-bottom:5px; margin-top:0;"></p>
+    <p id="ovReceipt" style="font-size:11px; color:#86868b; margin-bottom:10px; font-weight:500;"></p>
+    <div id="ovMed" style="display:none; background:#ffe5e5; color:var(--danger); padding:12px; border-radius:10px; font-size:12px; font-weight:700; border:1px solid #ff9999; margin-bottom:15px; align-items:center;"></div>
+
+    <div class="section" id="ovEditForm" style="display:none; border-left: 4px solid var(--info);">
+        <h2 style="font-size:11px; color:var(--info); margin-bottom:15px;"><span style="display:flex; align-items:center;"><i data-feather="settings" class="icon" style="margin-right:8px;"></i> Edit Details</span></h2>
+        <input type="text" id="editName" placeholder="Full Name">
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <label>Gender</label>
+                <select id="editGender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="flex:1"><label>Contact No.</label><input type="tel" id="editPhone"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1"><label>Session Slot</label><input type="time" id="editSlot"></div>
+            <div style="flex:1"><label>Age</label><input type="number" id="editAge"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1"><label>Height (cm)</label><input type="number" step="0.1" id="editHeight"></div>
+            <div style="flex:1"><label>Receipt No.</label><input type="text" id="editReceipt"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1"><label>Total Sessions</label><input type="number" id="editSess"></div>
+            <div style="flex:1"><label>End Date</label><input type="date" id="editEnd"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1"><label>Injuries</label><input type="text" id="editMed"></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-info" onclick="saveClientEdit()"><i data-feather="save" class="icon"></i> Save</button>
+            <button class="btn-sub" style="flex:0.5;" onclick="document.getElementById('ovEditForm').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <div class="section active">
+        <h2 style="font-size:11px; margin-bottom:15px;"><span style="display:flex; align-items:center;"><i data-feather="activity" class="icon" style="color:var(--info); margin-right:8px;"></i> InBody & Nutrition Desk</span></h2>
+        <input type="date" id="bcaDate" style="width:auto; padding:10px; font-size:12px; border-radius:8px;">
+        <div style="display:flex; gap:8px; margin-top:5px;">
+            <div style="flex:1"><label>Weight (kg)</label><input type="number" step="0.1" id="inWeight"></div>
+            <div style="flex:1"><label>SMM (kg)</label><input type="number" step="0.1" id="inSmm"></div>
+            <div style="flex:1"><label>PBF (%)</label><input type="number" step="0.1" id="inPbf"></div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:5px;">
+            <div style="flex:1"><label>Visceral Fat</label><input type="number" id="inVisFat"></div>
+            <div style="flex:1.5"><label>BMR (kcal)</label><input type="number" id="inBmr"></div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:5px;">
+            <div style="flex:1"><label>BMI</label><input type="number" step="0.1" id="inBmi"></div>
+            <div style="flex:1"><label>InBody Score</label><input type="number" id="inScore"></div>
+        </div>
+        <div style="margin-top:10px; background:var(--bg); padding:10px; border-radius:8px; border:1px solid var(--border);">
+            <label>Lifestyle Activity (For TDEE)</label>
+            <select id="inActivity">
+                <option value="1.2">Sedentary (Desk Job)</option>
+                <option value="1.375">Lightly Active (1-3 days/wk)</option>
+                <option value="1.55">Moderately Active (3-5 days/wk)</option>
+                <option value="1.725">Very Active (Heavy training)</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn-info" onclick="saveBca()" style="flex:1;"><i data-feather="database" class="icon"></i> Log Data</button>
+            <button class="btn-main" onclick="generateSmartPlan()" style="flex:1; background:var(--text);"><i data-feather="cpu" class="icon"></i> AI Plan & Macros</button>
+        </div>
+        <div id="bcaHistory" class="history-pane" style="margin-top:15px; max-height:160px; overflow-y:auto; display:none;"></div>
+        
+        <div id="mealBuilderUI" style="display:none; margin-top:20px; border-top: 1px dashed var(--border); padding-top: 15px;"></div>
+    </div>
+
+    <div class="scout-card" id="scoutEngine" style="display:none; animation: fadeUp 0.3s ease-out;">
+        <h4 style="margin:0 0 10px 0; font-size:11px; color:var(--info); letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center;"><i data-feather="check-circle" class="icon"></i> Clinical Protocol</h4>
+        <div id="ovScout"></div>
+    </div>
+
+    <div class="section active">
+        <h2 style="font-size:11px;"><span style="display:flex; align-items:center;"><i data-feather="bar-chart-2" class="icon" style="color:var(--info); margin-right:8px;"></i> Volume Analytics</span></h2>
+        <div style="padding:10px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-top:10px;">
+            <canvas id="tonnageChart" height="150"></canvas>
+        </div>
+    </div>
+
+    <div class="section active">
+        <h2 style="font-size:11px;"><span style="display:flex; align-items:center;"><i data-feather="image" class="icon" style="color:var(--info); margin-right:8px;"></i> Physique Timeline</span></h2>
+        <div style="margin-top:10px;">
+            <input type="file" id="galleryUpload" accept="image/*" style="font-size:11px; padding:8px; border:1px dashed var(--border); background:transparent; cursor:pointer;" onchange="uploadToGallery(event)">
+            <div id="galleryGrid" class="gallery-grid"></div>
+        </div>
+    </div>
+
+    <div class="section active">
+        <h2 style="font-size:11px;"><span style="display:flex; align-items:center;"><i data-feather="zap" class="icon" style="color:var(--warning); margin-right:8px;"></i> Record Workout</span></h2>
+        <div style="margin-top:10px;">
+            <input type="date" id="logDate">
+            <input type="text" id="logWorkoutName" placeholder="Name Workout (e.g., Push Day)">
+            <select id="splitSelect" onchange="loadSplit(this.value)">
+                <option value="">-- Select Template --</option>
+                <option value="Pull (Back & Biceps)">Pull (Back & Biceps)</option>
+                <option value="Push (Chest, Shoulders, Triceps)">Push (Chest, Shoulders, Triceps)</option>
+                <option value="Legs (Quads, Hams, Glutes)">Legs (Quads, Hams, Glutes)</option>
+                <option value="Core & Functional">Core & Functional</option>
+            </select>
+            <div id="exTagsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px;"></div>
+            <input type="text" id="exSearch" placeholder="Search exercise..." oninput="searchEx(this.value)">
+            <div id="searchRes" style="background:var(--card); border:1px solid var(--border); display:none; max-height:120px; overflow-y:auto; border-radius:10px; margin-bottom:10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);"></div>
+
+            <div id="setForm" style="display:none; padding:15px; background:var(--card); border-radius:12px; border:1px solid var(--info); box-shadow:0 4px 12px rgba(0,122,255,0.05); animation: fadeUp 0.3s ease-out;">
+                <b id="curEx" style="font-size:14px; color:var(--info); display:block; margin-bottom:5px;">Selected</b>
+                
+                <div id="historyRecall" style="background:var(--bg); padding:8px; border-radius:8px; margin-bottom:12px; font-size:11px; color:#86868b; display:none; align-items:center; justify-content:space-between; border: 1px solid var(--border);">
+                    <span id="historyRecallText">Last: -</span>
+                    <div>
+                        <button class="btn-action" onclick="applyProgression('wt')">+2.5% Wt</button>
+                        <button class="btn-action" onclick="applyProgression('rep')">+1 Rep</button>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <div style="flex:1;">
+                        <label>Sets</label>
+                        <input type="number" id="numSets" value="3" min="1" max="10" oninput="generateSetInputs()">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Rest Timer</label>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-sub" style="flex:1; margin:0;" onclick="startRestTimer(90)">90s</button>
+                            <button class="btn-sub" style="flex:1; margin:0;" onclick="startRestTimer(120)">120s</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="setInputsContainer"></div>
+
+                <button class="btn-info" onclick="saveExercise()" style="margin-top:15px;"><i data-feather="check" class="icon"></i> Save Exercise</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="restTimerUI">
+    <i data-feather="clock" class="icon-lg"></i> <span id="timerText">01:30</span>
+    <button onclick="stopRestTimer()" style="background:transparent; border:none; color:var(--danger); cursor:pointer; padding:0;"><i data-feather="x-circle" class="icon-lg"></i></button>
+</div>
+
+<div id="vipPortal">
+    <div style="text-align:center; margin-bottom:30px;">
+        <h4 style="color:#86868b; margin:0; letter-spacing:2px; text-transform:uppercase; font-size:10px;">VIP CLIENT PORTAL</h4>
+        <h1 id="vipName" style="font-size:32px; margin:5px 0; color:var(--text); letter-spacing:-1px;">Name</h1>
+        <p id="vipMeta" style="color:#86868b; font-size:13px; font-weight:600; margin:0;"></p>
+    </div>
+
+    <div class="vip-card" id="vipRoutineCard" style="display:none;">
+        <h3 style="margin-top:0; font-size:12px; color:#86868b; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:8px;"><i data-feather="play-circle" class="icon"></i> Latest Routine Form Guides</h3>
+        <div id="vipRoutineLinks" style="margin-top:15px;"></div>
+    </div>
+
+    <div class="vip-card">
+        <h3 style="margin-top:0; font-size:12px; color:#86868b; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:8px;"><i data-feather="target" class="icon"></i> Current Nutrition Targets</h3>
+        <div id="vipMacros" style="display:flex; justify-content:space-between; text-align:center; margin-top:15px;">
+            <div><div style="font-size:11px; color:#86868b; font-weight:700;">CALORIES</div><div id="vipCal" style="font-size:20px; font-weight:800; color:var(--text);"></div></div>
+            <div><div style="font-size:11px; color:#86868b; font-weight:700;">PROTEIN</div><div id="vipPro" style="font-size:20px; font-weight:800; color:#34C759;">-</div></div>
+            <div><div style="font-size:11px; color:#86868b; font-weight:700;">CARBS</div><div id="vipCarb" style="font-size:20px; font-weight:800; color:#007aff;">-</div></div>
+            <div><div style="font-size:11px; color:#86868b; font-weight:700;">FATS</div><div id="vipFat" style="font-size:20px; font-weight:800; color:#ff9500;">-</div></div>
+        </div>
+    </div>
+
+    <div class="vip-card">
+        <h3 style="margin-top:0; font-size:12px; color:#86868b; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:8px;"><i data-feather="trending-up" class="icon"></i> Body Composition Trend</h3>
+        <canvas id="vipChart" height="150"></canvas>
+    </div>
+
+    <div style="text-align:center; margin-top:40px; font-size:11px; color:#86868b; font-weight:600;">POWERED BY RYAL FITHUB</div>
+</div>
+
+<script>
+    feather.replace();
+
+    /* --- DATA MANAGEMENT --- */
+    let clients = JSON.parse(localStorage.getItem('ryal_pro_v9')) || [];
+    let shifts = JSON.parse(localStorage.getItem('ryal_shifts_v9')) || [];
+    let leads = JSON.parse(localStorage.getItem('ryal_leads_v9')) || [];
+    let expenses = JSON.parse(localStorage.getItem('ryal_exp_v9')) || []; 
+    
+    let workoutDB = JSON.parse(localStorage.getItem('ryal_workoutDB_v9')) || {
+        "Pull (Back & Biceps)": ["Pull-ups", "Lat Pulldown", "Seated Cable Row", "Barbell Row", "Barbell Bicep Curl", "Hammer Curl"],
+        "Push (Chest, Shoulders, Triceps)": ["Bench Press", "Incline DB Press", "Cable Crossover", "Overhead Press", "Lateral Raises", "Triceps Pushdown"],
+        "Legs (Quads, Hams, Glutes)": ["Barbell Squats", "Leg Press", "Leg Extensions", "Romanian Deadlift", "Hamstring Curls"],
+        "Core & Functional": ["Plank", "Russian Twists", "Leg Raises", "Kettlebell Swings"],
+        "Custom Exercises": [] 
+    };
+
+    const today = new Date().toISOString().split('T')[0];
+    let curID = null; let curExName = ""; let lastPerfData = null;
+    let tonnageChartInst = null;
+    let audioCtx = null; 
+
+    /* --- THEME ENGINE --- */
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('ryal_theme_v9', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        if(curID) renderTonnageChart(); 
+    }
+
+    /* --- EXPENSE TRACKER LOGIC --- */
+    function addExpense() {
+        const d = document.getElementById('expDate').value || today;
+        const c = document.getElementById('expCat').value;
+        const desc = document.getElementById('expDesc').value;
+        const amt = parseFloat(document.getElementById('expAmt').value);
+        if(!amt || amt <= 0) return alert("Enter a valid amount");
+        expenses.push({ id: Date.now(), date: d, cat: c, desc: desc, amt: amt });
+        localStorage.setItem('ryal_exp_v9', JSON.stringify(expenses));
+        document.getElementById('expDesc').value = ""; document.getElementById('expAmt').value = "";
+        render();
+    }
+    function delExpense(id) {
+        if(!confirm("Delete expense?")) return;
+        expenses = expenses.filter(e => e.id !== id);
+        localStorage.setItem('ryal_exp_v9', JSON.stringify(expenses));
+        render();
+    }
+
+    /* --- SEARCH & SUGGEST EXERCISES --- */
+    function searchEx(val) {
+        const resDiv = document.getElementById('searchRes');
+        if (!val || val.length < 2) { resDiv.style.display = 'none'; return; }
+        let matches = []; let searchLower = val.toLowerCase();
+        Object.values(workoutDB).forEach(exList => {
+            exList.forEach(ex => { if (ex.toLowerCase().includes(searchLower) && !matches.includes(ex)) { matches.push(ex); } });
+        });
+        if (!matches.some(m => m.toLowerCase() === searchLower)) { matches.push(val + " (Custom)"); }
+        resDiv.innerHTML = matches.map(ex => {
+            let actualName = ex.replace(" (Custom)", "");
+            return `<div style="padding:10px; font-size:13px; font-weight:500; color:var(--text); border-bottom:1px solid var(--border); cursor:pointer; display:flex; align-items:center; transition:background 0.2s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" onclick="applySearchedEx('${actualName}', ${ex.includes('(Custom)')})"><i data-feather="plus-circle" class="icon" style="color:var(--info);"></i> ${ex}</div>`;
+        }).join('');
+        feather.replace();
+        resDiv.style.display = 'block';
+    }
+
+    function applySearchedEx(name, isCustom) {
+        document.getElementById('searchRes').style.display = 'none'; document.getElementById('exSearch').value = "";
+        document.querySelectorAll('.ex-tag').forEach(e => e.classList.remove('active'));
+        
+        if(isCustom) {
+            let exists = false;
+            Object.values(workoutDB).forEach(list => { if(list.includes(name)) exists = true; });
+            if(!exists) {
+                workoutDB["Custom Exercises"].push(name);
+                localStorage.setItem('ryal_workoutDB_v9', JSON.stringify(workoutDB));
+            }
+        }
+
+        curExName = name; document.getElementById('curEx').innerText = name;
+        const c = clients.find(x => x.id === curID); lastPerfData = null;
+        let dates = Object.keys(c.logs).sort().reverse();
+        for(let d of dates) {
+            let found = c.logs[d].find(l => l.name === name);
+            if(found && found.sets && found.sets.length > 0) { lastPerfData = found.sets[0]; break; }
+        }
+        
+        const recUI = document.getElementById('historyRecall');
+        if(lastPerfData && lastPerfData.w && lastPerfData.r) {
+            document.getElementById('historyRecallText').innerText = `Last: ${lastPerfData.w}kg × ${lastPerfData.r} (RPE ${lastPerfData.rpe||'-'})`;
+            recUI.style.display = 'flex';
+        } else { recUI.style.display = 'none'; }
+        generateSetInputs(); document.getElementById('setForm').style.display = 'block'; 
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify({ clients, shifts, leads, workoutDB, expenses });
+        const url = URL.createObjectURL(new Blob([dataStr], { type: "application/json" }));
+        const a = document.createElement('a'); a.href = url; a.download = `RyalFit_Backup_${today}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    
+    function importData(event) {
+        const file = event.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if(data.clients && confirm("Overwrite current data?")) {
+                    localStorage.setItem('ryal_pro_v9', JSON.stringify(data.clients));
+                    if(data.shifts) localStorage.setItem('ryal_shifts_v9', JSON.stringify(data.shifts));
+                    if(data.leads) localStorage.setItem('ryal_leads_v9', JSON.stringify(data.leads));
+                    if(data.workoutDB) localStorage.setItem('ryal_workoutDB_v9', JSON.stringify(data.workoutDB));
+                    if(data.expenses) localStorage.setItem('ryal_exp_v9', JSON.stringify(data.expenses));
+                    alert("Backup loaded!"); location.reload(); 
+                }
+            } catch(err) { alert("Invalid backup file."); }
+            event.target.value = ""; 
+        }; reader.readAsText(file);
+    }
+
+    function toggleSec(id) { document.getElementById(id).classList.toggle('active'); }
+    function toggleGroup(id, el) { const div = document.getElementById(id); div.style.display = div.style.display === 'none' ? 'flex' : 'none'; }
+    function formatTime(time24) {
+        if(!time24) return ''; const [h, m] = time24.split(':'); let hours = parseInt(h); const ampm = hours >= 12 ? 'PM' : 'AM';
+        return `${hours % 12 || 12}:${m} ${ampm}`;
+    }
+
+    function encodeToHash(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
+    function decodeFromHash(hash) { return JSON.parse(decodeURIComponent(escape(atob(hash)))); }
+
+    window.onload = function() {
+        if(localStorage.getItem('ryal_theme_v9') === 'dark') document.body.classList.add('dark-mode');
+        
+        if(window.location.hash.startsWith('#vip=')) {
+            document.getElementById('appView').style.display = 'none';
+            document.getElementById('vipPortal').style.display = 'block';
+            loadVipPortal();
+        } else {
+            document.getElementById('attDate').value = today; 
+            document.getElementById('logDate').value = today;
+            document.getElementById('expDate').value = today;
+            document.getElementById('reportMonthInput').value = today.slice(0, 7); 
+            
+            document.querySelectorAll('.section').forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.05}s`;
+            });
+            
+            render();
+        }
+    };
+
+    function generateMonthlyReportPDF() {
+        let mStr = document.getElementById('reportMonthInput').value; 
+        if(!mStr) { alert("Please select a month first."); return; }
+        
+        let clientRowsHtml = ''; let sr = 1; let totalPtEarnedThisMonth = 0;
+        clients.forEach(c => {
+            let doneThisMonth = Object.keys(c.logs).filter(d => d.startsWith(mStr)).length;
+            let doneTotal = Object.keys(c.logs).length;
+            if(doneThisMonth > 0 || (c.startDate && c.startDate.startsWith(mStr))) { 
+                let remSess = Math.max(0, (c.sess || 0) - doneTotal);
+                let amtPerSess = ((c.pay||0)/(1+(c.gst||0))*(c.ret||0))/(c.sess||1);
+                let earnedThisMonth = amtPerSess * doneThisMonth;
+                totalPtEarnedThisMonth += earnedThisMonth;
+                clientRowsHtml += `<tr><td>${sr++}</td><td><b>${c.name}</b></td><td>${c.receipt || '-'}</td><td>₹${c.pay || 0}</td><td>${c.startDate || '-'}</td><td>${c.endDate || '-'}</td><td>${c.sess || 0}</td><td style="background:#e5f0ff; font-weight:bold; color:#1d1d1f;">${doneThisMonth}</td><td>${remSess}</td><td>₹${amtPerSess.toFixed(2)}</td><td style="color:#007aff; font-weight:bold;">₹${earnedThisMonth.toFixed(2)}</td></tr>`;
+            }
+        });
+        if(clientRowsHtml === '') clientRowsHtml = `<tr><td colspan="11" style="text-align:center; padding:20px; color:#86868b;">No active client sessions recorded for this month.</td></tr>`;
+        
+        let shiftRowsHtml = ''; let daysWorked = 0; let daysLate = 0; let daysWeekOff = 0; let daysAbsent = 0; let totalSalEarned = 0;
+        let monthShifts = shifts.filter(s => s.date.startsWith(mStr)).sort((a,b) => new Date(a.date) - new Date(b.date));
+        monthShifts.forEach(s => {
+            if(s.status === 'Present') daysWorked++; if(s.isLate) daysLate++; if(s.status === 'Week Off') daysWeekOff++; if(s.status === 'Absent') daysAbsent++;
+            let hrs = 0;
+            if(s.inTime && s.outTime) { let [inH, inM] = s.inTime.split(':').map(Number); let [outH, outM] = s.outTime.split(':').map(Number); hrs = ((outH * 60 + outM) - (inH * 60 + inM)) / 60; }
+            totalSalEarned += (s.pay || 0); let statusLabel = s.status; if(s.isLate) statusLabel += ' (Late)'; if(s.isHalfDay) statusLabel += ' (Half Day)';
+            shiftRowsHtml += `<tr><td>${s.date}</td><td>${statusLabel}</td><td>${formatTime(s.inTime) || '-'}</td><td>${formatTime(s.outTime) || '-'}</td><td>${hrs.toFixed(1)} hrs</td><td>₹${(s.pay || 0).toFixed(2)}</td></tr>`;
+        });
+        if(shiftRowsHtml === '') shiftRowsHtml = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#86868b;">No attendance shifts logged for this month.</td></tr>`;
+        
+        let expRowsHtml = ''; let totalExpThisMonth = 0;
+        let monthExp = expenses.filter(e => e.date.startsWith(mStr)).sort((a,b) => new Date(a.date) - new Date(b.date));
+        monthExp.forEach(e => {
+            totalExpThisMonth += e.amt;
+            expRowsHtml += `<tr><td>${e.date}</td><td><b>${e.cat}</b></td><td>${e.desc || '-'}</td><td style="color:#ff3b30; font-weight:bold;">₹${e.amt.toFixed(2)}</td></tr>`;
+        });
+        if(expRowsHtml === '') expRowsHtml = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#86868b;">No expenses logged for this month.</td></tr>`;
+
+        let finalNet = (totalPtEarnedThisMonth + totalSalEarned) - totalExpThisMonth;
+
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`<html><head><title>Monthly Financial Report - ${mStr}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1d1d1f; font-size: 13px; }.header { border-bottom: 2px solid #1d1d1f; padding-bottom: 15px; margin-bottom: 30px; text-align: center; }h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 800; text-transform: uppercase; }h2 { margin-top: 40px; font-size: 16px; color: #555; text-transform: uppercase; border-bottom: 1px solid #d2d2d7; padding-bottom: 5px; }table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }th, td { border: 1px solid #d2d2d7; padding: 10px 8px; text-align: left; }th { background: #f5f5f7; font-weight: 700; text-transform: uppercase; font-size: 10px; color: #555; }.summary-box { background: #f5f5f7; border: 1px solid #d2d2d7; padding: 20px; border-radius: 12px; margin-top: 30px; display: flex; justify-content: space-around; text-align: center; }.sum-val { font-size: 20px; font-weight: 800; color: #1d1d1f; margin-top: 5px; }.sum-label { font-size: 10px; color: #86868b; text-transform: uppercase; font-weight: 700; }.footer { text-align: center; margin-top: 50px; font-size: 10px; color: #86868b; text-transform: uppercase; }</style></head><body><div class="header"><h1>KENZO FITNESS • TRAINER REPORT</h1><p style="margin:0; font-weight:600; color:#555;">Month: ${mStr} | Trainer: Abis Rizvi</p></div><h2>1. Personal Training (PT) Revenue Tracker</h2><table><thead><tr><th>Sr.</th><th>Client Name</th><th>Receipt No</th><th>Pkg ₹</th><th>Start Date</th><th>End Date</th><th>Total Sess.</th><th style="background:#007aff; color:white;">Done (Month)</th><th>Rem. Sess</th><th>Your Cut / Sess</th><th style="background:#007aff; color:white;">Earned (Month)</th></tr></thead><tbody>${clientRowsHtml}</tbody></table><div style="text-align:right; font-weight:800; font-size:16px;">Total PT Revenue (${mStr}): <span style="color:#007aff;">₹${totalPtEarnedThisMonth.toFixed(2)}</span></div><h2>2. Base Salary & Attendance Chart</h2><table><thead><tr><th>Date</th><th>Status</th><th>In Time</th><th>Out Time</th><th>Hours</th><th>Base Amount</th></tr></thead><tbody>${shiftRowsHtml}</tbody></table>
+        <h2>3. Business Expenses</h2><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody>${expRowsHtml}</tbody></table><div style="text-align:right; font-weight:800; font-size:16px;">Total Expenses (${mStr}): <span style="color:#ff3b30;">-₹${totalExpThisMonth.toFixed(2)}</span></div>
+        <div class="summary-box"><div><div class="sum-label">Days Present</div><div class="sum-val">${daysWorked}</div></div><div><div class="sum-label">Total Salary</div><div class="sum-val">₹${totalSalEarned.toFixed(2)}</div></div><div><div class="sum-label">Total PT</div><div class="sum-val">₹${totalPtEarnedThisMonth.toFixed(2)}</div></div><div><div class="sum-label">Total Expenses</div><div class="sum-val" style="color:#ff3b30;">-₹${totalExpThisMonth.toFixed(2)}</div></div><div><div class="sum-label">NET PROFIT</div><div class="sum-val" style="color:#34C759; font-size:24px;">₹${finalNet.toFixed(2)}</div></div></div><div class="footer">Generated securely via Ryal FitHub Clinical Engine</div><script>setTimeout(() => { window.print(); }, 800);<\/script></body></html>`);
+        printWindow.document.close();
+    }
+
+    function generateVIPLink() {
+        const c = clients.find(x => x.id === curID);
+        let recentEx = [];
+        let dates = Object.keys(c.logs).sort().reverse();
+        if(dates.length > 0) recentEx = c.logs[dates[0]].map(l => l.name).slice(0, 8); 
+        const payload = encodeToHash({ n: c.name, g: c.gender, a: c.age, h: c.height, bca: c.bca.slice(0, 10), tdee: c.tdee, macros: c.macros, ex: recentEx });
+        const url = window.location.href.split('#')[0] + '#vip=' + payload;
+        navigator.clipboard.writeText(url);
+        alert("VIP Link copied! It now automatically includes YouTube video guides for their most recent workout.");
+    }
+
+    function loadVipPortal() {
+        try {
+            const data = decodeFromHash(window.location.hash.replace('#vip=', ''));
+            document.getElementById('vipName').innerText = data.n;
+            document.getElementById('vipMeta').innerText = `${data.g || '-'} | ${data.a ? data.a+' Yrs' : '-'} | ${data.h ? data.h+' cm' : '-'}`;
+            if(data.ex && data.ex.length > 0) {
+                document.getElementById('vipRoutineCard').style.display = 'block';
+                document.getElementById('vipRoutineLinks').innerHTML = data.ex.map(ex => `<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex + ' exercise form tutorial')}" target="_blank" style="display:block; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; text-decoration:none; color:var(--text); font-weight:600; font-size:13px; display:flex; justify-content:space-between; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"><span style="display:flex; align-items:center;"><i data-feather="youtube" style="color:#ff0000; margin-right:8px; width:16px; height:16px;"></i> ${ex}</span><i data-feather="external-link" style="width:14px; color:#86868b;"></i></a>`).join('');
+            }
+            if(data.tdee && data.macros) {
+                document.getElementById('vipCal').innerText = data.tdee;
+                document.getElementById('vipPro').innerText = data.macros.p + 'g';
+                document.getElementById('vipCarb').innerText = data.macros.c + 'g';
+                document.getElementById('vipFat').innerText = data.macros.f + 'g';
+            }
+            if(data.bca && data.bca.length > 0) {
+                const chartData = [...data.bca].reverse();
+                const ctx = document.getElementById('vipChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.map(b => b.date),
+                        datasets: [
+                            { label: 'Weight (kg)', data: chartData.map(b => b.w), borderColor: '#86868b', tension: 0.3 },
+                            { label: 'Muscle (kg)', data: chartData.map(b => b.smm), borderColor: '#34C759', tension: 0.3 },
+                            { label: 'Fat (%)', data: chartData.map(b => b.pbf), borderColor: '#ff3b30', tension: 0.3 }
+                        ]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+            feather.replace();
+        } catch(e) { alert("Invalid VIP Link."); }
+    }
+
+    function addLead() {
+        const n = document.getElementById('leadName').value; const c = document.getElementById('leadContact').value;
+        if(!n) return alert("Name is required.");
+        leads.push({ id: Date.now(), name: n, contact: c, date: today, trials: [] });
+        localStorage.setItem('ryal_leads_v9', JSON.stringify(leads));
+        document.getElementById('leadName').value = ""; document.getElementById('leadContact').value = ""; render();
+    }
+    function logTrial(id) {
+        const l = leads.find(x => x.id === id);
+        const date = document.getElementById(`trialDate_${id}`).value;
+        const act = document.getElementById(`trialAct_${id}`).value;
+        const rem = document.getElementById(`trialRem_${id}`).value;
+        if(!act) return alert("Please enter the activity you performed.");
+        if(!l.trials) l.trials = []; l.trials.push({ date, activity: act, remark: rem });
+        localStorage.setItem('ryal_leads_v9', JSON.stringify(leads));
+        render();
+    }
+    function convertLead(id) {
+        const lead = leads.find(l => l.id === id); leads = leads.filter(l => l.id !== id);
+        localStorage.setItem('ryal_leads_v9', JSON.stringify(leads));
+        document.getElementById('regName').value = lead.name || ""; document.getElementById('regPhone').value = lead.contact || "";
+        document.getElementById('sec-leads').classList.remove('active'); document.getElementById('sec-prof').classList.add('active');
+        render(); alert("Lead moved to Profile Setup!");
+    }
+    function delLead(id) { if(confirm("Delete this lead permanently?")) { leads = leads.filter(l => l.id !== id); localStorage.setItem('ryal_leads_v9', JSON.stringify(leads)); render(); } }
+
+    let timerInt;
+    function startRestTimer(seconds) {
+        if(!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
+        clearInterval(timerInt);
+        const ui = document.getElementById('restTimerUI'); const txt = document.getElementById('timerText');
+        ui.style.display = 'flex'; ui.style.background = "#1d1d1f";
+        let left = seconds;
+        timerInt = setInterval(() => {
+            let m = Math.floor(left / 60); let s = left % 60;
+            txt.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            if(left <= 0) { 
+                clearInterval(timerInt); ui.style.background = "var(--danger)"; txt.innerText = "TIME UP!"; 
+                try { if(navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch(e) {}
+                if(audioCtx) { try { const osc = audioCtx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} }
+                setTimeout(stopRestTimer, 5000); 
+            }
+            left--;
+        }, 1000);
+    }
+    function stopRestTimer() { clearInterval(timerInt); document.getElementById('restTimerUI').style.display = 'none'; document.getElementById('restTimerUI').style.background = "#1d1d1f"; }
+
+    function logAtt(status) {
+        const d = document.getElementById('attDate').value; const inT = document.getElementById('attIn').value; const outT = document.getElementById('attOut').value;
+        const [inH, inM] = inT.split(':').map(Number); const [outH, outM] = outT.split(':').map(Number);
+        const totalMins = (outH * 60 + outM) - (inH * 60 + inM);
+        let isLate = false; let isHalfDay = false;
+        if (status === 'Present' && totalMins > 0) { if (totalMins <= 240) isHalfDay = true; else if (totalMins < 350) isLate = true; }
+        const baseWage = 10000 / new Date(parseInt(d.split('-')[0]), parseInt(d.split('-')[1]), 0).getDate();
+        shifts.push({ id: Date.now(), date: d, inTime: inT, outTime: outT, status, isLate, isHalfDay, pay: (status === 'Present' || status === 'Week Off') ? baseWage : 0 });
+        localStorage.setItem('ryal_shifts_v9', JSON.stringify(shifts)); render();
+    }
+    function delShift(id) { shifts = shifts.filter(s => s.id !== id); localStorage.setItem('ryal_shifts_v9', JSON.stringify(shifts)); render(); }
+
+    function regClient() {
+        const name = document.getElementById('regName').value; if(!name) return alert("Name required");
+        clients.push({ id: Date.now(), name, phone: document.getElementById('regPhone').value, gender: document.getElementById('regGender').value, age: document.getElementById('regAge').value, height: document.getElementById('regHeight').value, receipt: document.getElementById('regReceipt').value, slot: document.getElementById('regSlot').value, level: document.getElementById('regLevel').value, med: document.getElementById('regMed').value, startDate: document.getElementById('regStart').value, endDate: document.getElementById('regEnd').value, prof: document.getElementById('regProf').value, pay: parseFloat(document.getElementById('regPay').value) || 0, sess: parseInt(document.getElementById('regSess').value) || 1, gst: parseFloat(document.getElementById('regGst').value) || 0, ret: parseFloat(document.getElementById('regRet').value) || 0.4, logs: {}, bca: [], meals: [], gallery: [] });
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); alert("Registered!"); render();
+    }
+    function toggleHistory(id) { const row = document.getElementById(`hist-${id}`); row.style.display = row.style.display === 'none' ? 'table-row' : 'none'; }
+    function delLog(cId, date, logId) {
+        if(!confirm("Delete exercise?")) return; const c = clients.find(x => x.id === cId); c.logs[date] = c.logs[date].filter(l => l.id !== logId);
+        if (c.logs[date].length === 0) delete c.logs[date]; localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); render();
+    }
+
+    function openOv(id) {
+        curID = id; const c = clients.find(x => x.id === id);
+        if(!c.meals) c.meals = []; if(!c.gallery) c.gallery = [];
+        
+        document.getElementById('clientOverlay').style.display = 'block'; document.getElementById('clientMenu').style.display = 'none'; document.getElementById('ovEditForm').style.display = 'none';
+        document.getElementById('ovName').innerText = c.name;
+        let phoneUI = c.phone ? `<span style="color:var(--info);"><i data-feather="phone" class="icon"></i> ${c.phone}</span> | ` : '';
+        document.getElementById('ovTags').innerHTML = `${phoneUI}${c.gender || 'N/A'} | ${c.age?c.age+'Yrs':'-'} | ${c.height?c.height+'cm':'-'} | ${c.prof || 'General'}`;
+        document.getElementById('ovReceipt').innerText = c.receipt ? `Rec: ${c.receipt} ${c.slot?'| '+formatTime(c.slot):''} | Valid: ${c.startDate||'?'} to ${c.endDate||'?'}` : '';
+        const medBox = document.getElementById('ovMed'); if(c.med && c.med.toLowerCase() !== "none") { medBox.innerHTML = `<i data-feather="alert-triangle" class="icon" style="margin-right:8px;"></i> ALERT: ${c.med}`; medBox.style.display = 'flex'; } else medBox.style.display = 'none';
+        document.getElementById('bcaDate').value = today; document.getElementById('scoutEngine').style.display = "none";
+        document.getElementById('logWorkoutName').value = ""; document.getElementById('splitSelect').value = ""; document.getElementById('exTagsContainer').innerHTML = ""; document.getElementById('setForm').style.display = 'none';
+        if(c.bca && c.bca.length > 0) { 
+            const r = c.bca[0]; 
+            if(document.getElementById('inWeight')) document.getElementById('inWeight').value = r.w||""; 
+            if(document.getElementById('inSmm')) document.getElementById('inSmm').value = r.smm||""; 
+            if(document.getElementById('inPbf')) document.getElementById('inPbf').value = r.pbf||""; 
+            if(document.getElementById('inBmi')) document.getElementById('inBmi').value = r.bmi||""; 
+            if(document.getElementById('inScore')) document.getElementById('inScore').value = r.score||""; 
+            if(document.getElementById('inVisFat')) document.getElementById('inVisFat').value = r.visFat||""; 
+            if(document.getElementById('inBmr')) document.getElementById('inBmr').value = r.bmr||""; 
+        } else { 
+            document.querySelectorAll('#inWeight,#inSmm,#inPbf,#inBmi,#inScore,#inVisFat,#inBmr').forEach(el => { if(el) el.value=""; }); 
+        }
+        
+        if(c.tdee && c.macros) { renderMealBuilder(); } else { document.getElementById('mealBuilderUI').style.display = 'none'; }
+        renderGallery(); renderBcaHistory(); renderTonnageChart(); feather.replace();
+    }
+
+    function showEditForm() {
+        document.getElementById('clientMenu').style.display = 'none';
+        const c = clients.find(x => x.id === curID);
+        document.getElementById('editName').value = c.name || "";
+        document.getElementById('editPhone').value = c.phone || "";
+        document.getElementById('editGender').value = c.gender || "Other";
+        document.getElementById('editAge').value = c.age || "";
+        document.getElementById('editHeight').value = c.height || "";
+        document.getElementById('editSlot').value = c.slot || "";
+        document.getElementById('editReceipt').value = c.receipt || "";
+        document.getElementById('editSess').value = c.sess || "";
+        document.getElementById('editEnd').value = c.endDate || "";
+        document.getElementById('editMed').value = c.med || "";
+        document.getElementById('ovEditForm').style.display = 'block';
+    }
+
+    function saveClientEdit() {
+        const c = clients.find(x => x.id === curID);
+        c.name = document.getElementById('editName').value || c.name;
+        c.phone = document.getElementById('editPhone').value || "";
+        c.gender = document.getElementById('editGender').value || c.gender;
+        c.age = document.getElementById('editAge').value || "";
+        c.height = document.getElementById('editHeight').value || "";
+        c.slot = document.getElementById('editSlot').value || "";
+        c.receipt = document.getElementById('editReceipt').value || "";
+        c.sess = parseInt(document.getElementById('editSess').value) || c.sess;
+        c.endDate = document.getElementById('editEnd').value || "";
+        c.med = document.getElementById('editMed').value || "";
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients));
+        document.getElementById('ovEditForm').style.display = 'none';
+        openOv(curID); render(); 
+    }
+    
+    function deleteCurrentClient() { if(confirm("DANGER: Permanently delete client?")) { clients = clients.filter(c => c.id !== curID); localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); document.getElementById('clientOverlay').style.display = 'none'; render(); } }
+
+    function formatWaLink(phone, msg) {
+        let cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
+        if(cleanPhone && cleanPhone.length >= 10) return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+
+    function sendWaReminder() {
+        const c = clients.find(x => x.id === curID);
+        let title = c.gender === 'Female' ? "Ma'am" : (c.gender === 'Male' ? "Sir" : "");
+        let greeting = title ? `Hello ${title},` : `Hello ${c.name},`;
+        let timeStr = c.slot ? ` at *${formatTime(c.slot)}*` : ``;
+        let msg = `${greeting}\n\nThis is a gentle reminder for your upcoming personal training session${timeStr}. \n\nSee you at Kenzo Fitness! 💪\n- Abis Rizvi`;
+        window.open(formatWaLink(c.phone, msg));
+    }
+
+    function generateProgressPDF() {
+        const c = clients.find(x => x.id === curID);
+        if(!c.bca || c.bca.length < 1) return alert("You need at least 1 saved BCA log to generate a report.");
+        let oldest = c.bca[c.bca.length-1]; let latest = c.bca[0];
+        let chartData = [...c.bca].reverse();
+        let labels = chartData.map(b => b.date); let weightData = chartData.map(b => b.w); let smmData = chartData.map(b => b.smm); let pbfData = chartData.map(b => b.pbf);
+        let ageStr = c.age ? `${c.age} Yrs` : 'N/A'; let hStr = c.height ? `${c.height} cm` : 'N/A';
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`<html><head><title>Monthly Progress - ${c.name}</title><script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script><style>body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #1d1d1f; background: #fff; }.header { border-bottom: 2px solid #1d1d1f; padding-bottom: 15px; margin-bottom: 30px; text-align: center; }h1 { margin: 0 0 5px 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; text-transform: uppercase; }.meta { font-size: 13px; color: #555; font-weight: 600; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }.grid { display: flex; gap: 20px; margin-bottom: 30px; }.box { flex: 1; border: 1px solid #d2d2d7; padding: 20px; border-radius: 12px; background: #f5f5f7; }h3 { margin-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #86868b; border-bottom: 1px solid #d2d2d7; padding-bottom: 8px; margin-bottom: 15px; }.row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 600; }.val { color: #1d1d1f; font-weight: 800; }.chart-container { margin-top: 40px; border: 1px solid #d2d2d7; padding: 20px; border-radius: 12px; background: #fff; }.footer { text-align: center; margin-top: 50px; font-size: 11px; color: #86868b; text-transform: uppercase; letter-spacing: 1px; }</style></head><body><div class="header"><h1>${c.name}</h1><div class="meta"><span>AGE: ${ageStr}</span> | <span>HEIGHT: ${hStr}</span> | <span>WEIGHT: ${latest.w || '-'}kg</span> | <span>START: ${c.startDate || 'N/A'}</span> | <span>END: ${c.endDate || 'N/A'}</span></div></div><div class="grid"><div class="box"><h3>Before (Record: ${oldest.date})</h3><div class="row"><span>Weight</span> <span class="val">${oldest.w || '-'} kg</span></div><div class="row"><span>SMM (Muscle)</span> <span class="val">${oldest.smm || '-'} kg</span></div><div class="row"><span>PBF (Fat)</span> <span class="val">${oldest.pbf || '-'} %</span></div><div class="row"><span>Visceral Fat</span> <span class="val">Lvl ${oldest.visFat || '-'}</span></div><div class="row"><span>InBody Score</span> <span class="val">${oldest.score || '-'} / 100</span></div></div><div class="box"><h3>After (Record: ${latest.date})</h3><div class="row"><span>Weight</span> <span class="val">${latest.w || '-'} kg</span></div><div class="row"><span>SMM (Muscle)</span> <span class="val">${latest.smm || '-'} kg</span></div><div class="row"><span>PBF (Fat)</span> <span class="val">${latest.pbf || '-'} %</span></div><div class="row"><span>Visceral Fat</span> <span class="val">Lvl ${latest.visFat || '-'}</span></div><div class="row"><span>InBody Score</span> <span class="val">${latest.score || '-'} / 100</span></div></div></div><div class="chart-container"><h3 style="text-align:center; border:none; margin-bottom:20px; color:#1d1d1f;">BODY COMPOSITION TREND</h3><canvas id="bcaChart" height="100"></canvas></div><div class="footer">Kenzo Fitness • Prepared by Abis Rizvi • Ryal FitHub Clinical Engine</div><script>window.onload = function() { const ctx = document.getElementById('bcaChart').getContext('2d'); new Chart(ctx, { type: 'line', data: { labels: ${JSON.stringify(labels)}, datasets: [ { label: 'Weight (kg)', data: ${JSON.stringify(weightData)}, borderColor: '#1d1d1f', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 }, { label: 'Muscle (SMM kg)', data: ${JSON.stringify(smmData)}, borderColor: '#34C759', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 }, { label: 'Fat (PBF %)', data: ${JSON.stringify(pbfData)}, borderColor: '#ff3b30', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 } ] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { family: '-apple-system', size: 12, weight: '600' } } } }, animation: { onComplete: function() { setTimeout(() => { window.print(); }, 500); } } } }); };<\/script></body></html>`);
+        printWindow.document.close();
+    }
+
+    function uploadToGallery(event) {
+        const file = event.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas'); const scaleSize = 300 / img.width;
+                canvas.width = 300; canvas.height = img.height * scaleSize;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const c = clients.find(x => x.id === curID); 
+                if(!c.gallery) c.gallery = [];
+                c.gallery.push({ id: Date.now(), date: today, img: canvas.toDataURL('image/jpeg', 0.6) });
+                c.gallery.sort((a,b) => new Date(b.date) - new Date(a.date));
+                localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); 
+                renderGallery(); 
+            }; img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
+
+    function renderGallery() {
+        const c = clients.find(x => x.id === curID);
+        const grid = document.getElementById('galleryGrid');
+        if(!c.gallery || c.gallery.length === 0) { grid.innerHTML = `<div style="font-size:11px; color:#86868b; padding:10px;">No photos uploaded yet.</div>`; return; }
+        
+        grid.innerHTML = c.gallery.map((p, i) => `
+            <div class="gallery-item" style="animation: floatWave 3s ease-in-out infinite; animation-delay: ${i * 0.2}s;">
+                <img src="${p.img}" class="gallery-img">
+                <div class="gallery-date">${p.date}</div>
+                <button class="gallery-del" onclick="delGalleryPhoto(${p.id})"><i data-feather="x" style="width:12px;"></i></button>
+            </div>
+        `).join('');
+        feather.replace();
+    }
+
+    function delGalleryPhoto(photoId) {
+        if(!confirm("Delete this photo from timeline?")) return;
+        const c = clients.find(x => x.id === curID);
+        c.gallery = c.gallery.filter(p => p.id !== photoId);
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients));
+        renderGallery();
+    }
+
+    function saveBca() {
+        const c = clients.find(x => x.id === curID); 
+        const d = document.getElementById('bcaDate').value || today;
+        const w = parseFloat(document.getElementById('inWeight')?.value) || 0; 
+        const smm = parseFloat(document.getElementById('inSmm')?.value) || 0; 
+        const pbf = parseFloat(document.getElementById('inPbf')?.value) || 0;
+        const bmi = parseFloat(document.getElementById('inBmi')?.value) || 0; 
+        const score = parseFloat(document.getElementById('inScore')?.value) || 0; 
+        const visFat = parseFloat(document.getElementById('inVisFat')?.value) || 0; 
+        const bmr = parseFloat(document.getElementById('inBmr')?.value) || 0;
+        if(w === 0) return alert("Enter Weight to save log.");
+        const existingIdx = c.bca.findIndex(b => b.date === d);
+        if(existingIdx >= 0) { if(confirm("Overwrite?")) c.bca[existingIdx] = { date: d, w, smm, pbf, bmi, score, visFat, bmr }; else return; } else { c.bca.push({ date: d, w, smm, pbf, bmi, score, visFat, bmr }); }
+        c.bca.sort((a,b) => new Date(b.date) - new Date(a.date)); localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); renderBcaHistory();
+    }
+    
+    function renderBcaHistory() {
+        const c = clients.find(x => x.id === curID); const box = document.getElementById('bcaHistory');
+        if(!c.bca || c.bca.length === 0) { box.style.display = 'none'; return; } box.style.display = 'block';
+        box.innerHTML = `<div style="font-weight:700; font-size:11px; color:#86868b; margin-bottom:8px;">HISTORY LOG</div>` + c.bca.map((b, i) => `<div class="history-row" style="flex-direction:column; align-items:flex-start; background:var(--card); padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:8px; transition: transform 0.2s;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:5px;"><span style="font-weight:700; font-size:12px; color:var(--text);"><i data-feather="calendar" class="icon"></i> ${b.date}</span><button class="btn-action danger" onclick="delBca('${b.date}')"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button></div><div style="font-size:11px; color:#86868b;"><b>W:</b> ${b.w||0}kg | <b>SMM:</b> ${b.smm||0}kg | <b>PBF:</b> ${b.pbf||0}% <br><b>Score:</b> ${b.score||'-'} | <b>Visc:</b> Lvl ${b.visFat||'-'} | <b>BMR:</b> ${b.bmr||'-'}</div></div>`).join(''); feather.replace();
+    }
+
+    function delBca(date) {
+        if(!confirm("Delete this BCA log?")) return;
+        const c = clients.find(x => x.id === curID);
+        c.bca = c.bca.filter(b => b.date !== date);
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients));
+        if(c.bca.length === 0) { document.querySelectorAll('#inWeight,#inSmm,#inPbf,#inBmi,#inScore,#inVisFat,#inBmr').forEach(el => { if(el) el.value=""; }); }
+        renderBcaHistory();
+    }
+
+    function generateSmartPlan() {
+        const c = clients.find(x => x.id === curID);
+        const pbf = parseFloat(document.getElementById('inPbf').value) || 0; const w = parseFloat(document.getElementById('inWeight').value) || (c.bca.length > 0 ? c.bca[0].w : 0);
+        const bmr = parseFloat(document.getElementById('inBmr').value) || 0; const act = parseFloat(document.getElementById('inActivity').value) || 1.2;
+        const visFat = parseFloat(document.getElementById('inVisFat').value) || 0;
+        let goal = pbf > 22 ? "Fat Loss (Deficit)" : "Hypertrophy (Surplus/Maint)"; if(pbf === 0) goal = "General Fitness";
+        let nutText = "";
+        if(bmr > 0 && w > 0) {
+            let tdee = Math.round(bmr * act);
+            let targetCal = pbf > 22 ? tdee - 500 : tdee + 300; 
+            let pro = Math.round(w * 2.2); let fat = Math.round(w * 0.9); let carb = Math.round((targetCal - (pro*4 + fat*9)) / 4);
+            if (carb < 0) carb = 50; 
+            c.tdee = targetCal; c.macros = { p: pro, c: carb, f: fat }; localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); 
+            nutText = `<div style="background:var(--card); border:1px solid var(--info); padding:10px; border-radius:10px; margin-top:10px; box-shadow: 0 4px 12px rgba(0,122,255,0.08);"><div style="font-size:11px; color:var(--info); font-weight:800; margin-bottom:5px;"><i data-feather="target" class="icon"></i> NUTRITION PRESCRIPTION</div><div style="display:flex; justify-content:space-between; text-align:center; margin-top:8px;"><div><div style="font-size:9px; color:#888;">TDEE</div><div style="font-weight:800; font-size:13px; color:var(--text);">${tdee}</div></div><div><div style="font-size:9px; color:#888;">TARGET</div><div style="font-weight:800; font-size:14px; color:var(--info);">${targetCal}</div></div><div><div style="font-size:9px; color:#888;">PRO</div><div style="font-weight:800; font-size:13px; color:var(--text);">${pro}g</div></div><div><div style="font-size:9px; color:#888;">FAT</div><div style="font-weight:800; font-size:13px; color:var(--text);">${fat}g</div></div><div><div style="font-size:9px; color:#888;">CARB</div><div style="font-weight:800; font-size:13px; color:var(--text);">${carb}g</div></div></div></div>`;
+        }
+        let scout = `<div class="plan-box"><div style="font-weight:800; font-size:14px; border-bottom:1px solid var(--border); padding-bottom:5px;">AI Blueprint</div><div style="font-size:12px; margin-top:8px;"><b>Focus:</b> ${goal}</div>${visFat>=10?`<div style="color:var(--danger); font-size:11px; margin-top:5px; font-weight:700;">⚠️ High Visceral Fat. Strict Zone 2 Cardio required.</div>`:''}${nutText}</div>`;
+        document.getElementById('ovScout').innerHTML = scout; document.getElementById('scoutEngine').style.display = "block"; feather.replace();
+        renderMealBuilder();
+    }
+
+    function renderMealBuilder() {
+        const c = clients.find(x => x.id === curID);
+        const ui = document.getElementById('mealBuilderUI');
+        if(!c.tdee || !c.macros) { ui.style.display = 'none'; return; }
+        let totalP=0, totalC=0, totalF=0, totalCal=0;
+        c.meals.forEach(m => { totalP+=m.p; totalC+=m.c; totalF+=m.f; totalCal+=(m.p*4 + m.c*4 + m.f*9); });
+        let remCal = c.tdee - totalCal; let remP = c.macros.p - totalP; let remC = c.macros.c - totalC; let remF = c.macros.f - totalF;
+        let mealHtml = c.meals.map(m => `<div class="history-row bg-override" style="background:var(--bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border); margin-bottom:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"><div style="flex:1;"><b style="font-size:12px; color:var(--text);">${m.name}</b><div style="font-size:10px; color:#86868b;">P:${m.p}g | C:${m.c}g | F:${m.f}g | <b>${Math.round(m.p*4 + m.c*4 + m.f*9)}kcal</b></div></div><button class="btn-action danger" onclick="delMeal(${m.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button></div>`).join('');
+        ui.innerHTML = `<h3 style="font-size:11px; text-transform:uppercase; color:var(--info); margin:0 0 10px 0;"><i data-feather="pie-chart" class="icon"></i> Daily Meal Builder</h3><div style="display:flex; justify-content:space-between; text-align:center; background:var(--card); padding:10px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.02);"><div><div style="font-size:9px; color:#888;">REM. KCAL</div><div style="font-weight:800; font-size:14px; color:${remCal<0?'var(--danger)':'var(--text)'};">${remCal}</div></div><div><div style="font-size:9px; color:#888;">PRO</div><div style="font-weight:800; font-size:12px; color:${remP<0?'var(--danger)':'#34C759'};">${remP}g</div></div><div><div style="font-size:9px; color:#888;">CARB</div><div style="font-weight:800; font-size:12px; color:${remC<0?'var(--danger)':'#007aff'};">${remC}g</div></div><div><div style="font-size:9px; color:#888;">FAT</div><div style="font-weight:800; font-size:12px; color:${remF<0?'var(--danger)':'#ff9500'};">${remF}g</div></div></div>${mealHtml}<div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="mbName" placeholder="Food item..." style="flex:2; margin:0; padding:8px; font-size:11px;"><input type="number" id="mbP" placeholder="P(g)" style="flex:1; margin:0; padding:8px; font-size:11px;"><input type="number" id="mbC" placeholder="C(g)" style="flex:1; margin:0; padding:8px; font-size:11px;"><input type="number" id="mbF" placeholder="F(g)" style="flex:1; margin:0; padding:8px; font-size:11px;"></div><button class="btn-sub" style="width:100%; border-color:var(--info); color:var(--info); margin-top:8px; padding:8px;" onclick="addMeal()"><i data-feather="plus-circle" class="icon"></i> Add Food to Day</button>`;
+        ui.style.display = 'block'; feather.replace();
+    }
+
+    function addMeal() {
+        const c = clients.find(x => x.id === curID);
+        let n = document.getElementById('mbName').value; let p = parseFloat(document.getElementById('mbP').value)||0; let carb = parseFloat(document.getElementById('mbC').value)||0; let f = parseFloat(document.getElementById('mbF').value)||0;
+        if(!n) return alert("Enter a food name");
+        c.meals.push({ id: Date.now(), name: n, p:p, c:carb, f:f });
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); renderMealBuilder();
+    }
+
+    function delMeal(id) {
+        const c = clients.find(x => x.id === curID);
+        c.meals = c.meals.filter(m => m.id !== id);
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); renderMealBuilder();
+    }
+
+    function loadSplit(splitName) {
+        const cont = document.getElementById('exTagsContainer'); document.getElementById('setForm').style.display = 'none';
+        if(!splitName) { cont.innerHTML = ""; return; }
+        document.getElementById('logWorkoutName').value = document.getElementById('logWorkoutName').value || splitName;
+        cont.innerHTML = workoutDB[splitName].map(ex => `<div class="ex-tag" onclick="selSplitEx('${ex}', this)">${ex}</div>`).join("");
+    }
+    
+    function selSplitEx(name, el) {
+        document.querySelectorAll('.ex-tag').forEach(e => e.classList.remove('active')); el.classList.add('active');
+        curExName = name; document.getElementById('curEx').innerText = name;
+        const c = clients.find(x => x.id === curID); lastPerfData = null;
+        let dates = Object.keys(c.logs).sort().reverse();
+        for(let d of dates) {
+            let found = c.logs[d].find(l => l.name === name);
+            if(found && found.sets && found.sets.length > 0) { lastPerfData = found.sets[0]; break; }
+        }
+        const recUI = document.getElementById('historyRecall');
+        if(lastPerfData && lastPerfData.w && lastPerfData.r) {
+            document.getElementById('historyRecallText').innerText = `Last: ${lastPerfData.w}kg × ${lastPerfData.r} (RPE ${lastPerfData.rpe||'-'})`;
+            recUI.style.display = 'flex';
+        } else { recUI.style.display = 'none'; }
+        generateSetInputs(); document.getElementById('setForm').style.display='block'; 
+    }
+
+    function applyProgression(type) {
+        if(!lastPerfData) return;
+        let baseW = parseFloat(lastPerfData.w); let baseR = parseInt(lastPerfData.r);
+        let newW = baseW; let newR = baseR;
+        if(type === 'wt') newW = Math.round((baseW * 1.025) * 10) / 10; 
+        if(type === 'rep') newR = baseR + 1;
+        const count = parseInt(document.getElementById('numSets').value) || 1;
+        for(let i=1; i<=count; i++) {
+            let elW = document.getElementById(`inW_${i}`); let elR = document.getElementById(`inR_${i}`);
+            if(elW && !elW.value) elW.value = newW; if(elR && !elR.value) elR.value = newR;
+        }
+    }
+
+    function generateSetInputs() {
+        let count = parseInt(document.getElementById('numSets').value) || 1; let html = '';
+        for(let i=1; i<=count; i++) { html += `<div class="set-row"><span class="set-label">Set ${i}</span><input type="number" step="0.5" id="inW_${i}" class="set-input" placeholder="kg"><input type="number" id="inR_${i}" class="set-input" placeholder="Reps"><input type="number" id="inRpe_${i}" class="set-input" placeholder="RPE 1-10" style="max-width:70px;"></div>`; }
+        document.getElementById('setInputsContainer').innerHTML = html;
+    }
+
+    function saveExercise() {
+        const d = document.getElementById('logDate').value; const wName = document.getElementById('logWorkoutName').value || "General";
+        let setsData = []; const count = parseInt(document.getElementById('numSets').value) || 1;
+        for(let i=1; i<=count; i++) {
+            let w = document.getElementById(`inW_${i}`).value; let r = document.getElementById(`inR_${i}`).value; let rpe = document.getElementById(`inRpe_${i}`).value;
+            if (w || r) setsData.push({ set: i, w, r, rpe });
+        }
+        if(setsData.length === 0) return alert("Enter details.");
+        const c = clients.find(x => x.id === curID); if(!c.logs[d]) c.logs[d] = [];
+        c.logs[d].push({ id: Date.now(), workoutName: wName, name: curExName, sets: setsData });
+        localStorage.setItem('ryal_pro_v9', JSON.stringify(clients)); document.getElementById('setForm').style.display='none'; renderTonnageChart(); render();
+    }
+
+    function renderTonnageChart() {
+        const c = clients.find(x => x.id === curID);
+        if(tonnageChartInst) tonnageChartInst.destroy();
+        let tonnageMap = {};
+        Object.keys(c.logs).sort().forEach(date => {
+            let dayTotal = 0;
+            c.logs[date].forEach(ex => { if(ex.sets) ex.sets.forEach(s => { dayTotal += (parseFloat(s.w)||0) * (parseInt(s.r)||0); }); });
+            if(dayTotal > 0) tonnageMap[date] = dayTotal;
+        });
+        const dates = Object.keys(tonnageMap).slice(-10); const vols = dates.map(d => tonnageMap[d]);
+        let barColor = document.body.classList.contains('dark-mode') ? '#64d2ff' : '#007aff';
+        const ctx = document.getElementById('tonnageChart').getContext('2d');
+        tonnageChartInst = new Chart(ctx, { type: 'bar', data: { labels: dates, datasets: [{ label: 'Tonnage (kg lifted)', data: vols, backgroundColor: barColor, borderRadius: 4 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false } } } });
+    }
+
+    function render() {
+        // LEADS / TRIALS
+        let leadHtml = leads.map(l => {
+            let trialList = l.trials ? l.trials.map((t, i) => `<div style="font-size:11px; margin-top:5px; background:var(--bg); padding:8px; border-radius:6px; border:1px solid var(--border);"><div style="font-weight:700; color:var(--info); margin-bottom:3px;">Trial ${i+1} <span style="color:#86868b; font-weight:500;">(${t.date})</span></div><div style="margin-bottom:2px; color:var(--text);"><b>Activity:</b> ${t.activity}</div><div style="color:var(--text);"><b>Remark:</b> ${t.remark}</div></div>`).join('') : '';
+            let nextTrialForm = (!l.trials || l.trials.length < 3) ? `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);"><div style="font-size:10px; font-weight:700; color:#86868b; margin-bottom:5px;">LOG TRIAL ${l.trials ? l.trials.length + 1 : 1}</div><input type="date" id="trialDate_${l.id}" value="${today}" style="padding:6px; font-size:11px; margin-bottom:5px;"><input type="text" id="trialAct_${l.id}" placeholder="What we did (e.g. Assessment)" style="padding:6px; font-size:11px; margin-bottom:5px;"><input type="text" id="trialRem_${l.id}" placeholder="Remark (e.g. Needs push)" style="padding:6px; font-size:11px; margin-bottom:5px;"><button class="btn-sub" style="padding:6px; font-size:11px; width:100%; border-color:var(--info); color:var(--info);" onclick="logTrial(${l.id})">Save Trial</button></div>` : `<div style="margin-top:10px; font-size:11px; color:var(--warning); font-weight:700;"><i data-feather="alert-circle" class="icon"></i> 3 Trials Completed. Convert or Drop.</div>`;
+            let currentStage = l.trials && l.trials.length > 0 ? `<span class="badge info">TRIAL ${l.trials.length}</span>` : `<span class="badge neutral" style="background:#e5e5ea; color:#1d1d1f; border:1px solid #d2d2d7;">NEW</span>`;
+            return `<div class="history-row bg-override" style="flex-direction:column; align-items:flex-start; background:var(--card); padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px; transition: transform 0.2s;"><div style="display:flex; justify-content:space-between; width:100%; align-items:center;"><div><b style="color:var(--text); font-size:14px;">${l.name}</b> ${currentStage}<br><span style="font-size:11px; color:#86868b;"><i data-feather="phone" class="icon"></i> ${l.contact || 'No Contact'}</span></div><button class="btn-action" style="border:none; color:#86868b;" onclick="toggleGroup('lead-${l.id}', this)"><i data-feather="chevron-down" class="icon-lg" style="margin:0;"></i></button></div><div id="lead-${l.id}" style="display:none; width:100%; margin-top:10px; flex-direction:column;">${trialList}${nextTrialForm}<div style="display:flex; gap:10px; margin-top:12px;"><button class="btn-main" style="flex:1; padding:8px; font-size:11px;" onclick="convertLead(${l.id})">Convert to Client</button><button class="btn-action danger" style="padding:8px; font-size:11px;" onclick="delLead(${l.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button></div></div></div>`;
+        }).join('');
+        document.getElementById('leadsList').innerHTML = leadHtml || "<span style='font-size:12px; color:#888;'>No active trials.</span>";
+
+        // ATTENDANCE
+        let aMonth = (document.getElementById('attDate').value || today).slice(0, 7); let mShifts = shifts.filter(s => s.date.startsWith(aMonth));
+        let pC = mShifts.filter(s => s.status === 'Present').length; let lC = mShifts.filter(s => s.isLate).length; let hC = mShifts.filter(s => s.isHalfDay).length;
+        document.getElementById('attList').innerHTML = `<div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:var(--primary); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border); text-transform:uppercase;"><span>${aMonth}</span><span>${pC} P | ${lC} L | ${hC} H</span></div>` + mShifts.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(s => `<div class="history-row" style="color:var(--text);"><span><i data-feather="clock" class="icon" style="color:#86868b;"></i> ${s.date} | <b>${s.status}</b> ${s.isLate?'<span class="badge danger">LATE</span>':''}${s.isHalfDay?'<span class="badge warning">HALF</span>':''}</span><button class="btn-action danger" onclick="delShift(${s.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button></div>`).join("");
+
+        // EXPENSES
+        let expHtml = expenses.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(e => `
+            <div class="history-row" style="color:var(--text); transition:transform 0.2s;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                <span><span style="font-size:10px; color:#86868b; display:block;"><i data-feather="calendar" class="icon"></i> ${e.date} | ${e.cat}</span>${e.desc||'-'}</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <b style="color:var(--danger);">₹${e.amt}</b>
+                    <button class="btn-action danger" onclick="delExpense(${e.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button>
+                </div>
+            </div>
+        `).join("");
+        document.getElementById('expList').innerHTML = expHtml || `<div style="font-size:12px; color:#86868b;">No expenses logged.</div>`;
+
+        // ROSTER
+        let rosterHtml = ""; let sortedC = [...clients].sort((a, b) => (a.slot||"23:59").localeCompare(b.slot||"23:59"));
+        sortedC.forEach(c => {
+            let done = Object.keys(c.logs).length; let daysLeft = c.endDate ? Math.ceil((new Date(c.endDate) - new Date(today)) / 86400000) : 999;
+            let isExp = (c.sess - done <= 0 || daysLeft < 0); let isWarn = (c.sess - done <= 2 || daysLeft <= 3);
+            let badge = isExp ? '<span class="badge danger">Expired</span>' : (isWarn ? '<span class="badge warning">Expiring</span>' : '');
+            let rowStyle = "";
+            if (document.body.classList.contains('dark-mode')) { if(isExp) rowStyle = "background:#3a1c1c;"; else if(isWarn) rowStyle = "background:#3a2e15;"; } else { if(isExp) rowStyle = "background:#ffe5e5;"; else if(isWarn) rowStyle = "background:#fff5e5;"; }
+
+            let histRows = "";
+            Object.keys(c.logs).sort().reverse().forEach(date => {
+                let safeDate = date.replace(/[^0-9]/g, '');
+                histRows += `<div onclick="toggleGroup('log-${c.id}-${safeDate}', this)" style="font-weight:700; margin-top:10px; border-bottom:1px solid var(--border); color:var(--info); padding-bottom:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;"><span><i data-feather="calendar" class="icon"></i> ${date}</span><i data-feather="chevron-down" class="icon" style="margin:0;"></i></div><div id="log-${c.id}-${safeDate}" style="display:none; padding-top:5px; flex-direction:column;">`;
+                c.logs[date].forEach(log => {
+                    let sets = (log.sets||[]).map(s => `<div style="font-size:11px; color:#86868b; padding:3px 0; border-bottom:1px dashed var(--border);"><b style="color:var(--text);">S${s.set}:</b> ${s.w||0}kg × ${s.r||0} <span style="font-size:9px;">${s.rpe?'@RPE '+s.rpe:''}</span></div>`).join('');
+                    histRows += `<div class="history-row bg-override" style="flex-direction:column; align-items:flex-start; background:var(--card); margin-bottom:5px; border-radius:8px; padding:10px; border:1px solid var(--border);"><div style="display:flex; justify-content:space-between; width:100%;"><span style="font-weight:700; font-size:12px; color:var(--text);">${log.name}</span><button class="btn-action danger" onclick="delLog(${c.id}, '${date}', ${log.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button></div><div style="margin-top:5px; width:100%;">${sets}</div></div>`;
+                });
+                histRows += `</div>`;
+            });
+            rosterHtml += `<tr style="${rowStyle} transition:background 0.3s;"><td><span class="client-link" onclick="openOv(${c.id})">${c.name}</span>${badge}</td><td><b style="color:#86868b; font-size:11px;">${formatTime(c.slot)||'-'}</b></td><td style="color:var(--text);"><b>${done}</b> / ${c.sess}</td><td style="text-align:right;"><button class="btn-action" onclick="toggleHistory(${c.id})">Logs</button></td></tr><tr id="hist-${c.id}" style="display:none;"><td colspan="4"><div class="history-pane">${histRows||'No logs.'}</div></td></tr>`;
+        });
+        document.getElementById('rosterView').innerHTML = rosterHtml;
+
+        // REVENUE LOGIC
+        let mData = {}; let todayRev = 0;
+        shifts.forEach(s => { 
+            let m=s.date.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].sal += s.pay||0; 
+            if(!mData[m].daily[s.date]) mData[m].daily[s.date] = {sal:0,pt:0,pen:0}; mData[m].daily[s.date].sal += s.pay||0;
+            if(s.isLate||s.isHalfDay) { let p = ((10000/30)*0.5); mData[m].pen += p; mData[m].daily[s.date].pen += p; }
+            if(s.date === today) todayRev += s.pay||0;
+        });
+        clients.forEach(c => { 
+            let pt = ((c.pay||0)/(1+(c.gst||0))*(c.ret||0))/(c.sess||1); 
+            Object.keys(c.logs).forEach(d => { 
+                if(c.logs[d].length>0) { 
+                    let m=d.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].pt += pt; 
+                    if(!mData[m].daily[d]) mData[m].daily[d] = {sal:0,pt:0,pen:0}; mData[m].daily[d].pt += pt;
+                    if(d === today) todayRev += pt;
+                }
+            }); 
+        });
+        expenses.forEach(e => { let m=e.date.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].exp += e.amt; });
+        
+        let revHtml = Object.keys(mData).sort().reverse().map(m => {
+            let net = mData[m].sal + mData[m].pt - mData[m].pen - mData[m].exp;
+            let dailyHtml = ""; let sortedDays = Object.keys(mData[m].daily).sort().reverse();
+            if(sortedDays.length > 0) {
+                dailyHtml = `<div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;"><div style="font-size:10px; font-weight:700; color:#86868b; margin-bottom:5px; text-transform:uppercase;">Daily Breakdown (Excl. Expenses)</div>`;
+                sortedDays.forEach(d => { let dayData = mData[m].daily[d]; let dayNet = dayData.sal + dayData.pt - dayData.pen; dailyHtml += `<div style="display:flex; justify-content:space-between; font-size:11px; padding:6px 0; border-bottom:1px solid var(--bg);"><span><i class="fa-regular fa-calendar" style="color:#86868b; margin-right:4px;"></i> <span style="color:var(--text);">${d}</span></span><span style="font-weight:600; color:${dayNet < 0 ? 'var(--danger)' : 'var(--text)'};">₹${dayNet.toFixed(0)}</span></div>`; });
+                dailyHtml += `</div>`;
+            }
+            return `<div style="background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:10px; padding:0 12px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'"><div class="rev-month" onclick="toggleGroup('rev-split-${m}', this)" style="cursor:pointer; border-bottom:none; margin-top:0; padding:12px 0;"><span style="display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-calendar-days" style="color:#86868b;"></i> ${m}</span><div style="display:flex; align-items:center; gap:8px;"><span style="color:${net<0?'var(--danger)':'var(--primary)'}; font-size:16px;">₹${net.toFixed(0)}</span><i class="fa-solid fa-chevron-down" style="color:#86868b; font-size:12px; transition:0.3s;"></i></div></div><div id="rev-split-${m}" class="rev-split" style="display:none; padding-bottom:12px; border-top:1px solid var(--border); margin-top:0; padding-top:12px; flex-direction:column;"><div style="display:flex; gap:15px; flex-wrap:wrap;"><span><i class="fa-solid fa-building-columns" style="color:#86868b; margin-right:3px;"></i> SAL: <b style="color:var(--text);">₹${mData[m].sal.toFixed(0)}</b></span><span><i class="fa-solid fa-handshake-angle" style="color:#86868b; margin-right:3px;"></i> PT: <b style="color:var(--text);">₹${mData[m].pt.toFixed(0)}</b></span><span style="color:var(--danger)"><i class="fa-solid fa-circle-exclamation" style="margin-right:3px;"></i> PEN: <b>-₹${mData[m].pen.toFixed(0)}</b></span><span style="color:var(--danger)"><i class="fa-solid fa-credit-card" style="margin-right:3px;"></i> EXP: <b>-₹${mData[m].exp.toFixed(0)}</b></span></div>${dailyHtml}</div></div>`;
+        }).join('');
+        
+        document.getElementById('revView').innerHTML = revHtml || "<span style='font-size:12px; color:#888;'>No data.</span>";
+        document.getElementById('statRevenue').innerText = `₹${todayRev.toFixed(0)}`;
+        document.getElementById('statSessions').innerText = clients.reduce((count, c) => count + (c.logs[today] && c.logs[today].length > 0 ? 1 : 0), 0);
+        document.getElementById('statShift').innerText = shifts.find(x => x.date === today)?.status || "-";
+        
+        feather.replace();
+    }
+</script>
+</body>
+</html>

@@ -227,6 +227,10 @@
                 <input type="time" id="authOut" value="14:00">
             </div>
         </div>
+        <div class="auth-input-group" style="margin-top:10px;">
+            <label style="color:var(--primary);">Gemini AI API Key (Optional)</label>
+            <input type="password" id="authAiKey" placeholder="AIzaSyD2zyHWcsspU436o9yJXUbl8jpE9Uq_Hlw">
+        </div>
         
         <button class="btn-main" onclick="saveTrainerProfile()" style="margin-top: 10px; font-size: 15px; padding: 16px;">Launch Workspace <i data-feather="arrow-right" style="margin-left:8px;"></i></button>
     </div>
@@ -507,6 +511,42 @@
     </div>
     
     <div class="section active" id="scoutEngine" style="display:none; border-left:4px solid var(--primary);"><h4 style="margin:0 0 12px 0; font-size:12px; color:var(--text); text-transform:uppercase; display:flex; align-items:center; font-weight:800;"><i data-feather="check-circle" class="icon" style="color:var(--primary);"></i> Clinical Protocol</h4><div id="ovScout"></div></div>
+
+    <div class="section active" style="border-left:4px solid #8b5cf6; background: linear-gradient(145deg, var(--bg), rgba(139, 92, 246, 0.05));">
+        <h2 style="font-size:12px;"><span style="display:flex; align-items:center;"><i data-feather="cpu" class="icon" style="color:#8b5cf6; margin-right:8px;"></i> AI Co-Pilot & Plateau Breaker</span></h2>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:10px;">Scans the last 14 days of this client's performance and BCA data to generate a clinical protocol.</p>
+        
+        <button class="btn-main" style="background:#8b5cf6; color:white; border:none; margin-top:10px;" onclick="runPlateauAI()">
+            <i data-feather="zap" class="icon"></i> Analyze Client Data
+        </button>
+        
+        <div id="aiOutputBox" style="display:none; margin-top:15px; padding:15px; background:var(--card); border:1px solid #8b5cf6; border-radius:12px; font-size:13px; line-height:1.6; color:var(--text); box-shadow: 0 10px 25px rgba(139, 92, 246, 0.1);">
+            <div id="aiThinking" style="color:#8b5cf6; font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center;">
+                <i data-feather="loader" style="width:14px; animation:spin 1s linear infinite; margin-right:8px;"></i> Running Diagnostics...
+            </div>
+            <div id="aiResultText" style="display:none; margin-top:5px;"></div>
+        </div>
+    </div>
+
+    <div class="section active" style="border-left: 4px solid var(--danger);">
+        <h2 style="font-size:12px;"><span style="display:flex; align-items:center;"><i data-feather="heart" class="icon" style="color:var(--danger); margin-right:8px;"></i> Endurance & Cardio</span></h2>
+        <div style="margin-top:15px;">
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1"><label>Date</label><input type="date" id="cardioDate"></div>
+                <div style="flex:1"><label>Activity</label><select id="cardioType"><option value="Run">Run</option><option value="Treadmill">Treadmill</option><option value="Cycle">Cycle</option><option value="Row">Row</option><option value="Swim">Swim</option></select></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1"><label>Dist (km)</label><input type="number" step="0.1" id="cardioDist" placeholder="e.g. 5.0"></div>
+                <div style="flex:1"><label>Time (Mins)</label><input type="number" id="cardioTime" placeholder="e.g. 25"></div>
+                <div style="flex:1"><label>Avg HR</label><input type="number" id="cardioHr" placeholder="150"></div>
+            </div>
+            <button class="btn-main" style="background:rgba(239, 68, 68, 0.1); color:var(--danger); border:1px solid var(--danger);" onclick="saveCardio()"><i data-feather="plus" class="icon"></i> Log Cardio Session</button>
+            <div id="cardioList" class="history-pane" style="margin-top:18px; max-height:180px; overflow-y:auto; display:none; padding:5px;"></div>
+            <div style="padding:15px; background:var(--bg); border:1px solid var(--border); border-radius:12px; margin-top:15px; display:none;" id="cardioChartBox">
+                <canvas id="cardioChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
     
     <div class="section active"><h2 style="font-size:12px;"><span style="display:flex; align-items:center;"><i data-feather="bar-chart-2" class="icon" style="color:var(--info); margin-right:8px;"></i> Volume Analytics</span></h2><div style="padding:15px; background:var(--bg); border:1px solid var(--border); border-radius:12px; margin-top:15px;"><canvas id="tonnageChart" height="150"></canvas></div></div>
     
@@ -586,6 +626,11 @@
             <div id="vipPrevious"></div>
         </div>
 
+        <div class="section" id="vipCardioSec" style="display:none; border-left: 4px solid var(--danger);">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="heart" class="icon" style="color:var(--danger);"></i> Endurance Log</h3>
+            <div id="vipCardioList"></div>
+        </div>
+
         <div class="section" style="border-left: 4px solid var(--primary);">
             <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="video" class="icon" style="color:var(--primary);"></i> Exercise Library</h3>
             <input type="text" id="vipSearchLib" placeholder="Search exercises..." oninput="searchVipLibrary(this.value)">
@@ -640,6 +685,7 @@
     window.curExName = ""; 
     window.lastPerfData = null;
     window.tonnageChartInst = null;
+    window.cardioChartInst = null;
     window.audioCtx = null;
     window.timerInt = null;
     window.slideInterval = null;
@@ -874,6 +920,27 @@
         }
         document.getElementById('vipResearchDocs').innerHTML = resHtml;
 
+        // 5. Render Cardio History on VIP Portal
+        if (d.client.cardio && d.client.cardio.length > 0) {
+            document.getElementById('vipCardioSec').style.display = 'block';
+            let cardioHtml = d.client.cardio.map(log => `
+                <div style="background:var(--card); padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="font-size:13px; color:var(--text);"><i data-feather="heart" class="icon" style="color:var(--danger);"></i> ${log.type}</b>
+                        <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${log.date}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; font-weight:700;">
+                        <span><span style="color:var(--danger); font-size:16px;">${log.dist}</span> km</span>
+                        <span><span style="color:var(--text); font-size:14px;">${log.paceStr}</span> /km</span>
+                        <span><span style="color:var(--text); font-size:14px;">${log.time}</span> min</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('vipCardioList').innerHTML = cardioHtml;
+        } else {
+            document.getElementById('vipCardioSec').style.display = 'none';
+        }
+
         window.searchVipLibrary(''); // Load full library initially
         if(window.feather) window.feather.replace();
     };
@@ -971,6 +1038,9 @@
         const salary = parseFloat(document.getElementById('authSalary').value);
         const shiftIn = document.getElementById('authIn').value;
         const shiftOut = document.getElementById('authOut').value;
+        const aiKey = document.getElementById('authAiKey').value;
+        
+        if(aiKey) localStorage.setItem('ryal_ai_key', aiKey);
 
         if(!name || !salary) { window.showAlert("Name and Base Salary are required."); return; }
         window.trainerProfile = { name, email, phone, salary, shiftIn, shiftOut };
@@ -986,6 +1056,8 @@
         document.getElementById('authSalary').value = window.trainerProfile.salary || "";
         document.getElementById('authIn').value = window.trainerProfile.shiftIn || "06:00";
         document.getElementById('authOut').value = window.trainerProfile.shiftOut || "14:00";
+        document.getElementById('authAiKey').value = localStorage.getItem('ryal_ai_key') || "";
+        
         document.getElementById('authView').style.display = 'flex';
         document.getElementById('loginBlock').style.display = 'none';
         document.getElementById('setupBlock').style.display = 'block';
@@ -1212,20 +1284,25 @@
 
     window.regClient = async () => {
         const name = document.getElementById('regName').value; if(!name) { window.showAlert("Name required"); return; }
-        window.clients.push({ id: Date.now(), name, phone: document.getElementById('regPhone').value, gender: document.getElementById('regGender').value, age: document.getElementById('regAge').value, height: document.getElementById('regHeight').value, receipt: document.getElementById('regReceipt').value, slot: document.getElementById('regSlot').value, level: document.getElementById('regLevel').value, med: document.getElementById('regMed').value, startDate: document.getElementById('regStart').value, endDate: document.getElementById('regEnd').value, prof: document.getElementById('regProf').value, pay: parseFloat(document.getElementById('regPay').value) || 0, sess: parseInt(document.getElementById('regSess').value) || 1, gst: parseFloat(document.getElementById('regGst').value) || 0, ret: parseFloat(document.getElementById('regRet').value) || 0.4, logs: {}, bca: [], meals: [], gallery: [] });
+        window.clients.push({ id: Date.now(), name, phone: document.getElementById('regPhone').value, gender: document.getElementById('regGender').value, age: document.getElementById('regAge').value, height: document.getElementById('regHeight').value, receipt: document.getElementById('regReceipt').value, slot: document.getElementById('regSlot').value, level: document.getElementById('regLevel').value, med: document.getElementById('regMed').value, startDate: document.getElementById('regStart').value, endDate: document.getElementById('regEnd').value, prof: document.getElementById('regProf').value, pay: parseFloat(document.getElementById('regPay').value) || 0, sess: parseInt(document.getElementById('regSess').value) || 1, gst: parseFloat(document.getElementById('regGst').value) || 0, ret: parseFloat(document.getElementById('regRet').value) || 0.4, logs: {}, bca: [], meals: [], gallery: [], cardio: [] });
         await window.syncToCloud(); window.showAlert("Client Registered!"); window.render();
     };
 
     window.openOv = (id) => {
         window.curID = id; const c = window.clients.find(x => x.id === id);
-        if(!c.meals) c.meals = []; if(!c.gallery) c.gallery = []; if(!c.bca) c.bca = []; if(!c.logs) c.logs = {};
+        if(!c.meals) c.meals = []; if(!c.gallery) c.gallery = []; if(!c.bca) c.bca = []; if(!c.logs) c.logs = {}; if(!c.cardio) c.cardio = [];
         document.getElementById('clientOverlay').style.display = 'block'; document.getElementById('clientMenu').style.display = 'none'; document.getElementById('ovEditForm').style.display = 'none';
+        document.getElementById('aiOutputBox').style.display = 'none';
+        
         document.getElementById('ovName').innerText = c.name;
         let phoneUI = c.phone ? `<span style="color:var(--info);"><i data-feather="phone" class="icon"></i> ${c.phone}</span> | ` : '';
         document.getElementById('ovTags').innerHTML = `${phoneUI}${c.gender || 'N/A'} | ${c.age?c.age+'Yrs':'-'} | ${c.height?c.height+'cm':'-'} | ${c.prof || 'General'}`;
         document.getElementById('ovReceipt').innerText = c.receipt ? `Rec: ${c.receipt} ${c.slot?'| '+window.formatTime(c.slot):''} | Valid: ${c.startDate||'?'} to ${c.endDate||'?'}` : '';
         const medBox = document.getElementById('ovMed'); if(c.med && c.med.toLowerCase() !== "none") { medBox.innerHTML = `<i data-feather="alert-triangle" class="icon" style="margin-right:8px;"></i> ALERT: ${c.med}`; medBox.style.display = 'flex'; } else medBox.style.display = 'none';
-        document.getElementById('bcaDate').value = window.today; document.getElementById('scoutEngine').style.display = "none";
+        
+        document.getElementById('bcaDate').value = window.today; 
+        document.getElementById('cardioDate').value = window.today;
+        document.getElementById('scoutEngine').style.display = "none";
         document.getElementById('logWorkoutName').value = ""; document.getElementById('splitSelect').value = ""; document.getElementById('exTagsContainer').innerHTML = ""; document.getElementById('setForm').style.display = 'none';
         if(c.bca && c.bca.length > 0) { 
             const r = c.bca[0]; document.getElementById('inWeight').value = r.w||""; document.getElementById('inSmm').value = r.smm||""; document.getElementById('inPbf').value = r.pbf||""; document.getElementById('inBmi').value = r.bmi||""; document.getElementById('inScore').value = r.score||""; document.getElementById('inVisFat').value = r.visFat||""; document.getElementById('inBmr').value = r.bmr||""; 
@@ -1235,6 +1312,7 @@
         window.renderGallery(); 
         window.renderBcaHistory(); 
         window.renderTonnageChart(); 
+        window.renderCardio();
         feather.replace();
     };
 
@@ -1723,6 +1801,164 @@
         } else {
             prompt("Copy your VIP Link here:", url);
         }
+    };
+
+    // --- THE AI CO-PILOT ENGINE ---
+    window.runPlateauAI = async () => {
+        const apiKey = localStorage.getItem('ryal_ai_key');
+        if(!apiKey) { 
+            window.showAlert("Please add your Gemini API Key in your Profile Settings first!"); 
+            return; 
+        }
+
+        const c = window.clients.find(x => x.id === window.curID);
+        if(!c) return;
+
+        // 1. Show the UI Loader
+        document.getElementById('aiOutputBox').style.display = 'block';
+        document.getElementById('aiThinking').style.display = 'flex';
+        document.getElementById('aiResultText').style.display = 'none';
+        if(window.feather) window.feather.replace();
+
+        // 2. Gather Client Context
+        let w = "Unknown"; let pbf = "Unknown"; let smm = "Unknown";
+        if(c.bca && c.bca.length > 0) {
+            w = c.bca[0].w || "Unknown"; pbf = c.bca[0].pbf || "Unknown"; smm = c.bca[0].smm || "Unknown";
+        }
+        
+        let macros = c.macros ? `${c.macros.p}g Pro, ${c.macros.c}g Carb, ${c.macros.f}g Fat` : "Not calculated";
+        
+        // Grab the last 4 workouts
+        let recentWorkouts = "";
+        let dates = Object.keys(c.logs || {}).sort().reverse().slice(0, 4);
+        dates.forEach(d => {
+            recentWorkouts += `Date: ${d}\n`;
+            c.logs[d].forEach(ex => {
+                let bestSet = ex.sets && ex.sets[0] ? `${ex.sets[0].w}kg x ${ex.sets[0].r}` : '';
+                recentWorkouts += `- ${ex.name}: ${bestSet}\n`;
+            });
+        });
+        if(recentWorkouts === "") recentWorkouts = "No recent training data logged.";
+
+        // 3. Build the Master Prompt
+        const prompt = `You are an elite sports scientist and clinical personal trainer. I am the trainer. Review my client's data and provide a 3-step advanced protocol to break their plateau, optimize recovery, and stimulate new growth. Keep it concise, highly clinical, and actionable. Do not use asterisks or markdown formatting, use plain HTML like <br> and <b> for bolding.
+
+        Client Profile: ${c.name}, ${c.gender}, ${c.age} years old.
+        Current Body Comp: Weight ${w}kg, Fat ${pbf}%, Muscle Mass ${smm}kg.
+        Target Macros: ${macros}.
+
+        Recent Training Performance (Last 4 Sessions):
+        ${recentWorkouts}
+        
+        Give me:
+        1. A periodization/training adjustment.
+        2. A nutritional or recovery adjustment.
+        3. A specific biomechanical or exercise swap suggestion.`;
+
+        // 4. Call the Gemini API
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+
+            const data = await response.json();
+            
+            if(data.error) throw new Error(data.error.message);
+            
+            let reply = data.candidates[0].content.parts[0].text;
+
+            // 5. Display the result
+            document.getElementById('aiThinking').style.display = 'none';
+            document.getElementById('aiResultText').innerHTML = reply;
+            document.getElementById('aiResultText').style.display = 'block';
+
+        } catch (error) {
+            document.getElementById('aiThinking').style.display = 'none';
+            document.getElementById('aiResultText').innerHTML = `<span style="color:var(--danger);"><b>AI Error:</b> ${error.message}</span>`;
+            document.getElementById('aiResultText').style.display = 'block';
+        }
+    };
+
+    // --- CARDIO LOGIC ---
+    window.saveCardio = async () => {
+        const c = window.clients.find(x => x.id === window.curID);
+        if(!c.cardio) c.cardio = [];
+        
+        const d = document.getElementById('cardioDate').value || window.today;
+        const type = document.getElementById('cardioType').value;
+        const dist = parseFloat(document.getElementById('cardioDist').value);
+        const time = parseInt(document.getElementById('cardioTime').value);
+        const hr = parseInt(document.getElementById('cardioHr').value) || 0;
+        
+        if(!dist || !time) { window.showAlert("Distance and Time are required."); return; }
+        
+        let paceDec = time / dist;
+        let paceMins = Math.floor(paceDec);
+        let paceSecs = Math.round((paceDec - paceMins) * 60);
+        let paceStr = `${paceMins}:${paceSecs.toString().padStart(2, '0')}`;
+        
+        c.cardio.push({ id: Date.now(), date: d, type, dist, time, paceStr, paceDec, hr });
+        c.cardio.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        document.getElementById('cardioDist').value = "";
+        document.getElementById('cardioTime').value = "";
+        document.getElementById('cardioHr').value = "";
+        
+        await window.syncToCloud();
+        window.renderCardio();
+    };
+
+    window.renderCardio = () => {
+        const c = window.clients.find(x => x.id === window.curID);
+        const list = document.getElementById('cardioList');
+        const chartBox = document.getElementById('cardioChartBox');
+        
+        if(!c.cardio || c.cardio.length === 0) { list.style.display = 'none'; chartBox.style.display = 'none'; return; }
+        
+        list.style.display = 'block';
+        chartBox.style.display = 'block';
+        
+        let htmlStr = "";
+        c.cardio.forEach(log => {
+            htmlStr += `<div class="history-row bg-override" style="background:var(--card); padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b style="font-size:13px; color:var(--text);">${log.type} &nbsp;&bull;&nbsp; ${log.date}</b>
+                        <span style="font-size:13px; font-weight:800; color:var(--danger);">${log.dist} km</span>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600;">Time: ${log.time}m &nbsp;|&nbsp; Pace: ${log.paceStr}/km &nbsp;|&nbsp; HR: ${log.hr||'-'} bpm</div>
+                </div>
+                <button class="btn-action danger" style="margin-left:10px;" onclick="delCardio(${log.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button>
+            </div>`;
+        });
+        list.innerHTML = htmlStr;
+
+        if(window.cardioChartInst) window.cardioChartInst.destroy();
+        let chartData = [...c.cardio].reverse().slice(-10); 
+        window.cardioChartInst = new Chart(document.getElementById('cardioChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartData.map(b => b.date),
+                datasets: [
+                    { label: 'Pace (m/km)', data: chartData.map(b => b.paceDec), borderColor: '#ef4444', tension: 0.4, yAxisID: 'y' },
+                    { label: 'Dist (km)', type: 'bar', data: chartData.map(b => b.dist), backgroundColor: 'rgba(239, 68, 68, 0.2)', yAxisID: 'y1' }
+                ]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { position: 'left', title:{display:true, text:'Pace'} }, y1: { position: 'right', grid:{display:false} } } }
+        });
+
+        if(window.feather) window.feather.replace();
+    };
+
+    window.delCardio = (id) => {
+        window.showConfirm("Delete this endurance log?", async () => {
+            const c = window.clients.find(x => x.id === window.curID);
+            c.cardio = c.cardio.filter(log => log.id !== id);
+            await window.syncToCloud();
+            window.renderCardio();
+        });
     };
 
 </script>

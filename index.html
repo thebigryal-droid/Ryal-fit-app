@@ -783,7 +783,9 @@
                 window.showAlert("Invalid Client ID. Please request a new link from your trainer.");
                 document.getElementById('vipLoginBox').style.display = 'block';
             }
-        } catch(e) { window.showAlert("Connection error."); }
+            
+        } catch(e) { window.showAlert("Connection error: " + e.message); }
+
         document.getElementById('cloudLoader').style.display = 'none';
     };
 

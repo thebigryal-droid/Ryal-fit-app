@@ -410,6 +410,7 @@
             <button class="btn-main" onclick="regClient()"><i data-feather="user-plus" class="icon"></i> Create Official Profile</button>
         </div>
     </div>
+
     <div class="section" id="sec-library" style="animation-delay: 0.4s;">
         <h2 onclick="toggleSec('sec-library')">
             <span style="display:flex; align-items:center;"><i data-feather="video" class="icon" style="color:var(--primary); margin-right:8px;"></i> Video Library</span>
@@ -430,6 +431,33 @@
         </div>
     </div>
 
+    <div class="section" id="sec-research" style="animation-delay: 0.45s;">
+        <h2 onclick="toggleSec('sec-research')">
+            <span style="display:flex; align-items:center;"><i data-feather="book-open" class="icon" style="color:var(--info); margin-right:8px;"></i> Clinical Research</span>
+            <i data-feather="chevron-down" class="chevron"></i>
+        </h2>
+        <div class="collapsible">
+            <p style="font-size:12px; color:var(--text-muted); margin-top:0;">Publish nutrition guides, biomechanics breakdowns, and mindset articles for your clients.</p>
+            <div style="display:flex; gap:12px; margin-bottom:12px;">
+                <div style="flex:2;"><label>Article Title</label><input type="text" id="resTitle" placeholder="e.g. Why Visceral Fat Matters"></div>
+                <div style="flex:1;">
+                    <label>Category</label>
+                    <select id="resCat">
+                        <option value="Nutrition">Nutrition</option>
+                        <option value="Biomechanics">Biomechanics</option>
+                        <option value="Mindset">Mindset</option>
+                        <option value="Protocol">Protocol</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom:15px;">
+                <label>Content</label>
+                <textarea id="resContent" rows="5" placeholder="Write your educational content here..." style="resize:vertical; line-height:1.5;"></textarea>
+            </div>
+            <button class="btn-main" onclick="addResearchArticle()"><i data-feather="send" class="icon"></i> Publish to VIP Portals</button>
+            <div id="researchList" class="history-pane" style="margin-top:18px; max-height:220px; overflow-y:auto; padding:5px;"></div>
+        </div>
+    </div>
 
     <footer class="app-footer">
         <i data-feather="cloud" style="width:14px; color:var(--primary);"></i> Cloud Synced &nbsp;&bull;&nbsp; Ryal FitHub Pro (by Abis Rizvi)
@@ -543,6 +571,11 @@
             <div id="vipLiveTrainer" style="font-size:10px; color:var(--primary); font-weight:800; margin-top:5px; letter-spacing:1px;"></div>
         </div>
 
+        <div class="section" style="border-left: 4px solid #8b5cf6;">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="book-open" class="icon" style="color:#8b5cf6;"></i> Clinical Hub</h3>
+            <div id="vipResearchDocs"></div>
+        </div>
+
         <div class="section" style="border-left: 4px solid var(--warning);">
             <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="calendar" class="icon" style="color:var(--warning);"></i> Upcoming Session</h3>
             <div id="vipUpcoming"></div>
@@ -593,6 +626,7 @@
     window.expenses = [];
     window.plans = [];
     window.videoLibrary = [];
+    window.researchCenter = [];
     window.workoutDB = {
         "Pull (Back & Biceps)": ["Pull-ups", "Lat Pulldown", "Seated Cable Row", "Barbell Row", "Barbell Bicep Curl", "Hammer Curl"],
         "Push (Chest, Shoulders, Triceps)": ["Bench Press", "Incline DB Press", "Cable Crossover", "Overhead Press", "Lateral Raises", "Triceps Pushdown"],
@@ -682,6 +716,52 @@
         });
     };
 
+    // --- CLINICAL RESEARCH LOGIC ---
+    window.addResearchArticle = async () => {
+        try {
+            let title = document.getElementById('resTitle').value;
+            let cat = document.getElementById('resCat').value;
+            let content = document.getElementById('resContent').value;
+
+            if(!title || !content) { window.showAlert("Title and Content are required."); return; }
+            if (!Array.isArray(window.researchCenter)) window.researchCenter = [];
+            
+            window.researchCenter.push({ id: Date.now(), title, cat, content, date: window.today });
+            
+            document.getElementById('resTitle').value = "";
+            document.getElementById('resContent').value = "";
+            
+            await window.syncToCloud();
+            window.renderResearch();
+            window.showAlert("Article published to all VIP Portals!");
+        } catch (e) { window.showAlert("Error: " + e.message); }
+    };
+
+    window.renderResearch = () => {
+        if (!Array.isArray(window.researchCenter)) window.researchCenter = [];
+        let htmlStr = "";
+        window.researchCenter.slice().reverse().forEach(r => {
+            htmlStr += `<div class="history-row bg-override" style="background:var(--card); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="flex:1;">
+                    <b style="font-size:14px; color:var(--text);">${r.title}</b>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:800; text-transform:uppercase;">${r.cat} &nbsp;&bull;&nbsp; ${r.date}</div>
+                </div>
+                <button class="btn-action danger" onclick="delResearchArticle(${r.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button>
+            </div>`;
+        });
+        document.getElementById('researchList').innerHTML = htmlStr || "<div style='font-size:13px; color:var(--text-muted); text-align:center; padding:10px;'>No articles published yet.</div>";
+        if(window.feather) window.feather.replace();
+    };
+
+    window.delResearchArticle = (id) => {
+        window.showConfirm("Delete this article? It will be removed from all client portals.", async () => {
+            window.researchCenter = window.researchCenter.filter(r => r.id !== id);
+            await window.syncToCloud();
+            window.renderResearch();
+        });
+    };
+
+
     window.vipDataStore = null; 
 
     // --- LIVE VIP PORTAL LOGIC ---
@@ -712,6 +792,7 @@
         document.getElementById('vipLiveName').innerText = d.client.name;
         document.getElementById('vipLiveTrainer').innerText = `TRAINING BY ${d.trainerName.toUpperCase()}`;
 
+        // 1. Render Upcoming Session
         let upHtml = `<div style="color:var(--text-muted); font-size:12px;">No upcoming sessions scheduled.</div>`;
         if (d.plans && d.plans.length > 0) {
             let future = d.plans.sort((a,b) => new Date(a.date) - new Date(b.date)).filter(p => p.date >= window.today);
@@ -735,13 +816,11 @@
                 if(d.client.logs[date].length > 0) {
                     let safeDate = date.replace(/[^0-9]/g, ''); 
                     
-                    // The clickable date header
                     prevHtml += `<div onclick="toggleGroup('vip-log-${safeDate}', this)" style="font-weight:800; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--info); padding:12px; border-radius:10px; font-size:13px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
                         <span><i data-feather="calendar" class="icon"></i> ${date}</span>
                         <i data-feather="chevron-down" class="icon" style="margin:0; color:var(--text-muted);"></i>
                     </div>`;
                     
-                    // The hidden exercises inside that date
                     prevHtml += `<div id="vip-log-${safeDate}" style="display:none; padding-left:10px; flex-direction:column; margin-bottom:15px; border-left:2px solid var(--border);">`;
                     d.client.logs[date].forEach(ex => {
                         let sets = ex.sets.map(s => `${s.w}kg × ${s.r}`).join(' | ');
@@ -757,7 +836,7 @@
         }
         document.getElementById('vipPrevious').innerHTML = prevHtml;
 
-
+        // 3. Render Progress Chart
         if(d.client.bca && d.client.bca.length > 0) {
             document.getElementById('vipChartSec').style.display = 'block';
             let chartData = [...d.client.bca].reverse();
@@ -775,16 +854,25 @@
             });
         }
 
-        window.searchVipLibrary(''); 
-        if(window.feather) window.feather.replace();
-    };
+        // 4. Render Clinical Hub (Research Docs)
+        let resHtml = `<div style="color:var(--text-muted); font-size:12px;">No articles published yet.</div>`;
+        if (d.researchCenter && d.researchCenter.length > 0) {
+            resHtml = d.researchCenter.slice().reverse().map(r => `
+                <div style="margin-bottom:12px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                    <div onclick="toggleGroup('vip-res-${r.id}', this)" style="padding:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:var(--bg);">
+                        <div>
+                            <div style="font-weight:800; font-size:13px; color:var(--text);">${r.title}</div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:800; text-transform:uppercase;">${r.cat}</div>
+                        </div>
+                        <i data-feather="chevron-down" class="icon" style="color:var(--text-muted); margin:0;"></i>
+                    </div>
+                    <div id="vip-res-${r.id}" style="display:none; padding:15px; font-size:13px; line-height:1.6; color:var(--text); border-top:1px solid var(--border); white-space:pre-wrap;">${r.content}</div>
+                </div>
+            `).join('');
+        }
+        document.getElementById('vipResearchDocs').innerHTML = resHtml;
 
-    window.searchVipLibrary = (query) => {
-        let q = query.toLowerCase();
-        let libs = window.vipDataStore.videoLibrary || [];
-        let filtered = libs.filter(v => v.name.toLowerCase().includes(q) || (v.muscle && v.muscle.toLowerCase().includes(q)));
-        let htmlStr = filtered.map(v => `<a href="${v.url}" target="_blank" style="display:block; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; text-decoration:none; transition:transform 0.2s;"><div style="font-weight:700; font-size:13px; color:var(--text); display:flex; justify-content:space-between;"><span><i data-feather="youtube" style="color:#ef4444; width:14px; margin-right:5px;"></i> ${v.name}</span><i data-feather="external-link" style="width:14px; color:var(--text-muted);"></i></div><div style="font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:800; text-transform:uppercase;">${v.muscle || 'General'}</div></a>`).join('');
-        document.getElementById('vipLibResults').innerHTML = htmlStr || `<div style="font-size:12px; color:var(--text-muted); padding:10px; text-align:center;">No exercises match your search.</div>`;
+        window.searchVipLibrary(''); // Load full library initially
         if(window.feather) window.feather.replace();
     };
 
@@ -822,6 +910,7 @@
                         window.plans = data.plans || [];
                         if(data.workoutDB) window.workoutDB = data.workoutDB;
                         window.videoLibrary = data.videoLibrary || [];
+                        window.researchCenter = data.researchCenter || [];
 
                         document.getElementById('cloudLoader').style.display = 'none';
 
@@ -894,7 +983,7 @@
 
     window.syncToCloud = async () => {
         if (!currentUser) return;
-        const payload = { profile: window.trainerProfile, clients: window.clients, shifts: window.shifts, leads: window.leads, expenses: window.expenses, plans: window.plans, workoutDB: window.workoutDB, videoLibrary: window.videoLibrary };
+        const payload = { profile: window.trainerProfile, clients: window.clients, shifts: window.shifts, leads: window.leads, expenses: window.expenses, plans: window.plans, workoutDB: window.workoutDB, videoLibrary: window.videoLibrary, researchCenter: window.researchCenter };
         try {
             await setDoc(doc(db, "trainers", currentUser.uid), payload);
             
@@ -903,7 +992,8 @@
                     trainerName: window.trainerProfile.name,
                     client: c,
                     plans: window.plans.filter(p => p.clientId == c.id),
-                    videoLibrary: window.videoLibrary || []
+                    videoLibrary: window.videoLibrary || [],
+                    researchCenter: window.researchCenter || []
                 };
                 return setDoc(doc(db, "vip_portals", c.id.toString()), vipPayload);
             });
@@ -931,6 +1021,7 @@
         window.renderRoster();
         window.renderRevenue();
         window.renderLibrary();
+        window.renderResearch();
         if (window.feather) window.feather.replace();
     };
 

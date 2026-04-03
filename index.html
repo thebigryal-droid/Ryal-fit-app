@@ -815,7 +815,7 @@
             let dates = Object.keys(d.client.logs).sort().reverse();
             
             dates.forEach(date => {
-                if(d.client.logs[date].length > 0) {
+                if(d.client.logs[date] && d.client.logs[date].length > 0) {
                     let safeDate = date.replace(/[^0-9]/g, ''); 
                     
                     prevHtml += `<div onclick="toggleGroup('vip-log-${safeDate}', this)" style="font-weight:800; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--info); padding:12px; border-radius:10px; font-size:13px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
@@ -825,13 +825,19 @@
                     
                     prevHtml += `<div id="vip-log-${safeDate}" style="display:none; padding-left:10px; flex-direction:column; margin-bottom:15px; border-left:2px solid var(--border);">`;
                     d.client.logs[date].forEach(ex => {
-                        let sets = ex.sets.map(s => `${s.w}kg × ${s.r}`).join(' | ');
+                        // THE FIX: Added (ex.sets || []) to prevent the .map crash!
+                        let sets = (ex.sets || []).map(s => `${s.w || 0}kg × ${s.r || 0}`).join(' | ');
                         prevHtml += `<div style="margin-bottom:10px; padding:10px; background:var(--card); border-radius:8px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                             <div style="font-weight:800; font-size:13px; color:var(--text);">${ex.name}</div>
-                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600;">${sets}</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600;">${sets || 'No sets recorded'}</div>
                         </div>`;
                     });
                     prevHtml += `</div>`;
+                }
+            });
+            prevHtml += `</div>`;
+        }
+        document.getElementById('vipPrevious').innerHTML = prevHtml; += `</div>`;
                 }
             });
             prevHtml += `</div>`;

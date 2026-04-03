@@ -460,7 +460,7 @@
     </div>
 
     <footer class="app-footer">
-        <i data-feather="cloud" style="width:14px; color:var(--primary);"></i> Cloud Synced &nbsp;&bull;&nbsp; Ryal FitHub Pro (by Abis Rizvi)
+        <i data-feather="cloud" style="width:14px; color:var(--primary);"></i> Cloud Synced &nbsp;&bull;&nbsp; Ryal FitHub Pro
     </footer>
 </div>
 
@@ -825,7 +825,6 @@
                     
                     prevHtml += `<div id="vip-log-${safeDate}" style="display:none; padding-left:10px; flex-direction:column; margin-bottom:15px; border-left:2px solid var(--border);">`;
                     d.client.logs[date].forEach(ex => {
-                        // THE FIX: Added (ex.sets || []) to prevent the .map crash!
                         let sets = (ex.sets || []).map(s => `${s.w || 0}kg × ${s.r || 0}`).join(' | ');
                         prevHtml += `<div style="margin-bottom:10px; padding:10px; background:var(--card); border-radius:8px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                             <div style="font-weight:800; font-size:13px; color:var(--text);">${ex.name}</div>
@@ -833,12 +832,6 @@
                         </div>`;
                     });
                     prevHtml += `</div>`;
-                }
-            });
-            prevHtml += `</div>`;
-        }
-        document.getElementById('vipPrevious').innerHTML = prevHtml;
- += `</div>`;
                 }
             });
             prevHtml += `</div>`;
@@ -885,8 +878,7 @@
         if(window.feather) window.feather.replace();
     };
     
-    
-        window.searchVipLibrary = (query) => {
+    window.searchVipLibrary = (query) => {
         let q = query ? query.toLowerCase() : '';
         let libs = window.vipDataStore.videoLibrary || [];
         let filtered = libs.filter(v => v.name.toLowerCase().includes(q) || (v.muscle && v.muscle.toLowerCase().includes(q)));
@@ -894,9 +886,6 @@
         document.getElementById('vipLibResults').innerHTML = htmlStr || `<div style="font-size:12px; color:var(--text-muted); padding:10px; text-align:center;">No exercises match your search.</div>`;
         if(window.feather) window.feather.replace();
     };
-
-    
-    
 
     // --- THE URL ROUTER ---
     const urlParams = new URLSearchParams(window.location.search);

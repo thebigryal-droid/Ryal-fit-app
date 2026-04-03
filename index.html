@@ -865,8 +865,48 @@
     } else {
         // --- NORMAL TRAINER LOGIN ---
         onAuthStateChanged(auth, async (user) => {
-            // ... KEEP ALL YOUR EXISTING onAuthStateChanged CODE HERE ...
+            if (user) {
+                currentUser = user;
+                try {
+                    const docRef = doc(db, "trainers", user.uid);
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        window.trainerProfile = data.profile || null;
+                        window.clients = data.clients || [];
+                        window.shifts = data.shifts || [];
+                        window.leads = data.leads || [];
+                        window.expenses = data.expenses || [];
+                        window.plans = data.plans || [];
+                        if(data.workoutDB) window.workoutDB = data.workoutDB;
+                        window.videoLibrary = data.videoLibrary || [];
 
+                        document.getElementById('cloudLoader').style.display = 'none';
+
+                        if (window.trainerProfile) { 
+                            window.initApp(); 
+                            window.render();
+                        } else { 
+                            window.showSetupForm(user); 
+                        }
+                    } else {
+                        document.getElementById('cloudLoader').style.display = 'none';
+                        window.showSetupForm(user);
+                    }
+                } catch (error) {
+                    document.getElementById('cloudLoader').style.display = 'none';
+                    window.showAlert("Database Error: " + error.message);
+                }
+            } else {
+                document.getElementById('cloudLoader').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('authView').style.display = 'flex';
+                document.getElementById('loginBlock').style.display = 'block';
+                document.getElementById('setupBlock').style.display = 'none';
+            }
+        });
+    }
 
     window.ryalSignIn = () => {
         const provider = new GoogleAuthProvider();

@@ -549,7 +549,7 @@
         </div>
 
         <div class="section" style="border-left: 4px solid var(--info);">
-            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="check-circle" class="icon" style="color:var(--info);"></i> Previous Workout</h3>
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="check-circle" class="icon" style="color:var(--info);"></i> Workout History </h3>
             <div id="vipPrevious"></div>
         </div>
 
@@ -725,20 +725,38 @@
         }
         document.getElementById('vipUpcoming').innerHTML = upHtml;
 
+        // 2. Render Full Workout History
         let prevHtml = `<div style="color:var(--text-muted); font-size:12px;">No past workouts logged.</div>`;
-        if (d.client.logs) {
+        if (d.client.logs && Object.keys(d.client.logs).length > 0) {
+            prevHtml = `<div style="max-height:300px; overflow-y:auto; padding-right:5px;">`;
             let dates = Object.keys(d.client.logs).sort().reverse();
-            if (dates.length > 0 && d.client.logs[dates[0]].length > 0) {
-                let lastDate = dates[0];
-                let exercises = d.client.logs[lastDate];
-                let exList = exercises.map(ex => {
-                    let sets = ex.sets.map(s => `${s.w}kg x ${s.r}`).join(', ');
-                    return `<div style="padding:10px 0; border-bottom:1px dashed var(--border);"><b style="color:var(--text); font-size:13px;">${ex.name}</b><div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${sets}</div></div>`;
-                }).join('');
-                prevHtml = `<div style="font-weight:800; font-size:12px; color:var(--info); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border);">${lastDate}</div>${exList}`;
-            }
+            
+            dates.forEach(date => {
+                if(d.client.logs[date].length > 0) {
+                    let safeDate = date.replace(/[^0-9]/g, ''); 
+                    
+                    // The clickable date header
+                    prevHtml += `<div onclick="toggleGroup('vip-log-${safeDate}', this)" style="font-weight:800; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--info); padding:12px; border-radius:10px; font-size:13px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                        <span><i data-feather="calendar" class="icon"></i> ${date}</span>
+                        <i data-feather="chevron-down" class="icon" style="margin:0; color:var(--text-muted);"></i>
+                    </div>`;
+                    
+                    // The hidden exercises inside that date
+                    prevHtml += `<div id="vip-log-${safeDate}" style="display:none; padding-left:10px; flex-direction:column; margin-bottom:15px; border-left:2px solid var(--border);">`;
+                    d.client.logs[date].forEach(ex => {
+                        let sets = ex.sets.map(s => `${s.w}kg × ${s.r}`).join(' | ');
+                        prevHtml += `<div style="margin-bottom:10px; padding:10px; background:var(--card); border-radius:8px; border:1px solid var(--border); box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-weight:800; font-size:13px; color:var(--text);">${ex.name}</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:600;">${sets}</div>
+                        </div>`;
+                    });
+                    prevHtml += `</div>`;
+                }
+            });
+            prevHtml += `</div>`;
         }
         document.getElementById('vipPrevious').innerHTML = prevHtml;
+
 
         if(d.client.bca && d.client.bca.length > 0) {
             document.getElementById('vipChartSec').style.display = 'block';

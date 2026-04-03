@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#09090b">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
         :root { 
             --primary: #c3f53c; 
@@ -407,7 +410,7 @@
             <button class="btn-main" onclick="regClient()"><i data-feather="user-plus" class="icon"></i> Create Official Profile</button>
         </div>
     </div>
-        <div class="section" id="sec-library" style="animation-delay: 0.4s;">
+    <div class="section" id="sec-library" style="animation-delay: 0.4s;">
         <h2 onclick="toggleSec('sec-library')">
             <span style="display:flex; align-items:center;"><i data-feather="video" class="icon" style="color:var(--primary); margin-right:8px;"></i> Video Library</span>
             <i data-feather="chevron-down" class="chevron"></i>
@@ -436,7 +439,7 @@
 <div id="clientOverlay">
     <button class="btn-sub" onclick="document.getElementById('clientOverlay').style.display='none'" style="margin-bottom:20px; border-radius:20px;"><i data-feather="arrow-left" class="icon"></i> Dashboard</button>
     <div style="display:flex; gap:12px;"><button class="btn-wa" style="flex:1;" onclick="sendWaReminder()"><i data-feather="bell" class="icon"></i> Reminder</button><button class="btn-pdf" style="flex:1;" onclick="generateProgressPDF()"><i data-feather="file-text" class="icon"></i> Print Report</button></div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin: 20px 0 8px 0;"><h1 id="ovName" style="margin:0; font-size:28px; font-weight:800; letter-spacing:-1px;">Name</h1><div style="position:relative;"><button onclick="document.getElementById('clientMenu').style.display = document.getElementById('clientMenu').style.display === 'block' ? 'none' : 'block'" style="background:none; border:none; color:var(--text); cursor:pointer; padding:5px;"><i data-feather="more-vertical" class="icon-lg"></i></button><div id="clientMenu" style="display:none; position:absolute; right:0; top:40px; background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:180px; animation: fadeUp 0.2s ease-out;"><button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:12px; font-size:14px; margin-bottom:5px; font-weight:700; color:var(--text); cursor:pointer; border-radius:10px;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" onclick="showEditForm()"><i data-feather="edit-2" class="icon"></i> Edit Profile</button><button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:12px; font-size:14px; margin-bottom:5px; font-weight:700; color:var(--info); cursor:pointer; border-radius:10px;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" onclick="generateVIPLink()"><i data-feather="link" class="icon"></i> Copy VIP Link</button><button class="btn-danger" style="width:100%; padding:12px; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px;" onclick="deleteCurrentClient()"><i data-feather="trash-2" class="icon"></i> Delete Client</button></div></div></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin: 20px 0 8px 0;"><h1 id="ovName" style="margin:0; font-size:28px; font-weight:800; letter-spacing:-1px;">Name</h1><div style="position:relative;"><button onclick="document.getElementById('clientMenu').style.display = document.getElementById('clientMenu').style.display === 'block' ? 'none' : 'block'" style="background:none; border:none; color:var(--text); cursor:pointer; padding:5px;"><i data-feather="more-vertical" class="icon-lg"></i></button><div id="clientMenu" style="display:none; position:absolute; right:0; top:40px; background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.2); padding:10px; z-index:100; min-width:180px; animation: fadeUp 0.2s ease-out;"><button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:12px; font-size:14px; margin-bottom:5px; font-weight:700; color:var(--text); cursor:pointer; border-radius:10px;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" onclick="showEditForm()"><i data-feather="edit-2" class="icon"></i> Edit Profile</button><button class="btn-sub" style="width:100%; border:none; background:transparent; text-align:left; padding:12px; font-size:14px; margin-bottom:5px; font-weight:700; color:var(--info); cursor:pointer; border-radius:10px;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'" onclick="generateVIPLink()"><i data-feather="link" class="icon"></i> Copy Live Link</button><button class="btn-danger" style="width:100%; padding:12px; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px;" onclick="deleteCurrentClient()"><i data-feather="trash-2" class="icon"></i> Delete Client</button></div></div></div>
     <p id="ovTags" style="font-size:13px; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:8px; margin-top:0; letter-spacing:0.5px;"></p>
     <p id="ovReceipt" style="font-size:12px; color:var(--text-muted); margin-bottom:15px; font-weight:600;"></p>
     <div id="ovMed" style="display:none; background:rgba(239, 68, 68, 0.1); color:var(--danger); padding:14px; border-radius:12px; font-size:13px; font-weight:800; border:1px solid rgba(239, 68, 68, 0.3); margin-bottom:20px; align-items:center;"></div>
@@ -564,7 +567,6 @@
     </div>
 </div>
 
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -590,8 +592,8 @@
     window.leads = [];
     window.expenses = [];
     window.plans = [];
-    window.workoutDB
-    videoLibrary: window.videoLibrary= {
+    window.videoLibrary = [];
+    window.workoutDB = {
         "Pull (Back & Biceps)": ["Pull-ups", "Lat Pulldown", "Seated Cable Row", "Barbell Row", "Barbell Bicep Curl", "Hammer Curl"],
         "Push (Chest, Shoulders, Triceps)": ["Bench Press", "Incline DB Press", "Cable Crossover", "Overhead Press", "Lateral Raises", "Triceps Pushdown"],
         "Legs (Quads, Hams, Glutes)": ["Barbell Squats", "Leg Press", "Leg Extensions", "Romanian Deadlift", "Hamstring Curls"],
@@ -612,7 +614,6 @@
     if (window.feather) { window.feather.replace(); }
     if(localStorage.getItem('ryal_theme_v9') === 'light') document.body.classList.remove('dark-mode');
     
-    // Failsafe Timeout
     setTimeout(() => {
         const loader = document.getElementById('cloudLoader');
         if (loader && loader.style.display !== 'none') {
@@ -633,7 +634,6 @@
                 return; 
             }
             
-            // THE FIX: If it is not an array (e.g. if Firebase saved it weirdly), force it to be an array.
             if (!Array.isArray(window.videoLibrary)) {
                 window.videoLibrary = [];
             }
@@ -647,39 +647,16 @@
             await window.syncToCloud();
             window.renderLibrary();
             window.showAlert("Success! Video added to your cloud library.");
-            
         } catch (error) {
             window.showAlert("Error saving video: " + error.message);
         }
     };
 
     window.renderLibrary = () => {
-        // THE FIX: Also ensure it's an array before trying to display the list
         if (!Array.isArray(window.videoLibrary)) {
             window.videoLibrary = [];
         }
         
-        let htmlStr = "";
-        window.videoLibrary.forEach(v => {
-            htmlStr += `<div class="history-row bg-override" style="background:var(--card); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="flex:1;">
-                    <b style="font-size:14px; color:var(--text);">${v.name}</b>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px; font-weight:800; text-transform:uppercase;">${v.muscle || 'General'}</div>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-action" onclick="window.open('${v.url}', '_blank')"><i data-feather="play" class="icon" style="margin:0;"></i> Test</button>
-                    <button class="btn-action danger" onclick="delLibraryVideo(${v.id})"><i data-feather="trash-2" class="icon" style="margin:0;"></i></button>
-                </div>
-            </div>`;
-        });
-        document.getElementById('libraryList').innerHTML = htmlStr || "<div style='font-size:13px; color:var(--text-muted); text-align:center; padding:10px;'>No videos added to library yet.</div>";
-        if(window.feather) window.feather.replace();
-    };
-
-
-
-    window.renderLibrary = () => {
-        if(!window.videoLibrary) window.videoLibrary = [];
         let htmlStr = "";
         window.videoLibrary.forEach(v => {
             htmlStr += `<div class="history-row bg-override" style="background:var(--card); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
@@ -705,55 +682,6 @@
         });
     };
 
-
-    // --- VIP PORTAL DECODING & LOADING ---
-    window.encodeToHash = (obj) => btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-    window.decodeFromHash = (hash) => JSON.parse(decodeURIComponent(escape(atob(hash))));
-
-    window.loadVipPortal = () => {
-        try {
-            const data = window.decodeFromHash(window.location.hash.replace('#vip=', ''));
-            document.getElementById('vipName').innerText = data.n;
-            document.getElementById('vipMeta').innerText = `${data.g || '-'} | ${data.a ? data.a+' Yrs' : '-'} | ${data.h ? data.h+' cm' : '-'}`;
-            document.getElementById('vipTrainerNameSpan').innerText = `(BY ${data.tName ? data.tName.toUpperCase() : 'YOUR TRAINER'})`;
-            
-            if(data.ex && data.ex.length > 0) {
-                document.getElementById('vipRoutineCard').style.display = 'block';
-                document.getElementById('vipRoutineLinks').innerHTML = data.ex.map(item => {
-                    // Backwards compatibility for old links, plus handling the new video library links
-                    let exName = typeof item === 'string' ? item : item.name;
-                    let exUrl = typeof item === 'string' ? `https://www.youtube.com/results?search_query=${encodeURIComponent(item + ' exercise form tutorial')}` : item.url;
-                    
-                    return `<a href="${exUrl}" target="_blank" style="display:block; padding:14px; background:var(--bg); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; text-decoration:none; color:var(--text); font-weight:700; font-size:14px; display:flex; justify-content:space-between; transition:all 0.2s; box-shadow:0 2px 5px rgba(0,0,0,0.02);"><span style="display:flex; align-items:center;"><i data-feather="youtube" style="color:#ef4444; margin-right:10px; width:18px; height:18px;"></i> ${exName}</span><i data-feather="external-link" style="width:16px; color:var(--text-muted);"></i></a>`;
-                }).join('');
-            }
-
-            if(data.tdee && data.macros) {
-                document.getElementById('vipCal').innerText = data.tdee;
-                document.getElementById('vipPro').innerText = data.macros.p + 'g';
-                document.getElementById('vipCarb').innerText = data.macros.c + 'g';
-                document.getElementById('vipFat').innerText = data.macros.f + 'g';
-            }
-            if(data.bca && data.bca.length > 0) {
-                const chartData = [...data.bca].reverse();
-                const ctx = document.getElementById('vipChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartData.map(b => b.date),
-                        datasets: [
-                            { label: 'Weight (kg)', data: chartData.map(b => b.w), borderColor: '#94a3b8', tension: 0.4, borderWidth: 3 },
-                            { label: 'Muscle (kg)', data: chartData.map(b => b.smm), borderColor: '#10b981', tension: 0.4, borderWidth: 3 },
-                            { label: 'Fat (%)', data: chartData.map(b => b.pbf), borderColor: '#ef4444', tension: 0.4, borderWidth: 3 }
-                        ]
-                    },
-                    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { family: 'SF Pro Display', weight: 'bold' } } } } }
-                });
-            }
-            if (window.feather) window.feather.replace();
-        } catch(e) { window.showAlert("Invalid VIP Link."); }
-    };
-
     window.vipDataStore = null; 
 
     // --- LIVE VIP PORTAL LOGIC ---
@@ -765,7 +693,6 @@
         document.getElementById('cloudLoader').style.display = 'flex';
         
         try {
-            // Fetch live data specifically for this Client ID
             const docSnap = await getDoc(doc(db, "vip_portals", id));
             if(docSnap.exists()) {
                 window.vipDataStore = docSnap.data();
@@ -785,7 +712,6 @@
         document.getElementById('vipLiveName').innerText = d.client.name;
         document.getElementById('vipLiveTrainer').innerText = `TRAINING BY ${d.trainerName.toUpperCase()}`;
 
-        // 1. Render Upcoming Session
         let upHtml = `<div style="color:var(--text-muted); font-size:12px;">No upcoming sessions scheduled.</div>`;
         if (d.plans && d.plans.length > 0) {
             let future = d.plans.sort((a,b) => new Date(a.date) - new Date(b.date)).filter(p => p.date >= window.today);
@@ -799,7 +725,6 @@
         }
         document.getElementById('vipUpcoming').innerHTML = upHtml;
 
-        // 2. Render Previous Session
         let prevHtml = `<div style="color:var(--text-muted); font-size:12px;">No past workouts logged.</div>`;
         if (d.client.logs) {
             let dates = Object.keys(d.client.logs).sort().reverse();
@@ -815,7 +740,6 @@
         }
         document.getElementById('vipPrevious').innerHTML = prevHtml;
 
-        // 3. Render Progress Chart
         if(d.client.bca && d.client.bca.length > 0) {
             document.getElementById('vipChartSec').style.display = 'block';
             let chartData = [...d.client.bca].reverse();
@@ -833,7 +757,7 @@
             });
         }
 
-        window.searchVipLibrary(''); // Load full library initially
+        window.searchVipLibrary(''); 
         if(window.feather) window.feather.replace();
     };
 
@@ -850,7 +774,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     
     if (urlParams.has('vip')) {
-        // Hide trainer app, show VIP portal
         document.getElementById('cloudLoader').style.display = 'none';
         document.getElementById('authView').style.display = 'none';
         document.getElementById('appContainer').style.display = 'none';
@@ -858,9 +781,9 @@
         
         let clientId = urlParams.get('vip');
         if (clientId && clientId !== 'login') {
-             window.loginVIP(clientId); // Auto-login if ID is in URL
+             window.loginVIP(clientId); 
         } else {
-             document.getElementById('vipLoginBox').style.display = 'block'; // Show ID input box
+             document.getElementById('vipLoginBox').style.display = 'block'; 
         }
     } else {
         // --- NORMAL TRAINER LOGIN ---
@@ -955,25 +878,20 @@
         if (!currentUser) return;
         const payload = { profile: window.trainerProfile, clients: window.clients, shifts: window.shifts, leads: window.leads, expenses: window.expenses, plans: window.plans, workoutDB: window.workoutDB, videoLibrary: window.videoLibrary };
         try {
-            // Save main trainer database
             await setDoc(doc(db, "trainers", currentUser.uid), payload);
             
-            // MAGIC SYNC: Push live data to a separate public portal for every single client
             const vipPromises = window.clients.map(c => {
                 const vipPayload = {
                     trainerName: window.trainerProfile.name,
                     client: c,
-                    plans: window.plans.filter(p => p.clientId == c.id), // Grab their specific scheduled plans
-                    videoLibrary: window.videoLibrary || [] // Give them access to your library
+                    plans: window.plans.filter(p => p.clientId == c.id),
+                    videoLibrary: window.videoLibrary || []
                 };
-                // Saves to a new Firebase folder called "vip_portals" using their Client ID as the document name
                 return setDoc(doc(db, "vip_portals", c.id.toString()), vipPayload);
             });
             await Promise.all(vipPromises);
-            
         } catch (e) { console.error(e); }
     };
-
 
     window.initApp = () => {
         document.getElementById('authView').style.display = 'none';
@@ -1250,14 +1168,13 @@
         const c = window.clients.find(x => x.id === window.curID);
         if(!c.gallery || c.gallery.length === 0) { window.showAlert("No photos to display."); return; }
         
-        // Start from oldest if clicking "Play Auto", or from specific clicked image
         window.currentSlideIdx = (idx !== undefined) ? idx : (c.gallery.length - 1); 
         
         document.getElementById('slideshowModal').style.display = 'flex';
         window.updateSlide();
         
         clearInterval(window.slideInterval);
-        window.slideInterval = setInterval(() => { window.nextSlide(); }, 2500); // 2.5s per slide
+        window.slideInterval = setInterval(() => { window.nextSlide(); }, 2500); 
     };
 
     window.updateSlide = () => {
@@ -1270,8 +1187,8 @@
 
     window.nextSlide = () => { 
         const c = window.clients.find(x => x.id === window.curID);
-        window.currentSlideIdx--; // Going backwards in array goes forwards in time (since array is reverse sorted)
-        if(window.currentSlideIdx < 0) { window.currentSlideIdx = c.gallery.length - 1; } // Loop back to start
+        window.currentSlideIdx--; 
+        if(window.currentSlideIdx < 0) { window.currentSlideIdx = c.gallery.length - 1; } 
         window.updateSlide(); 
     };
     
@@ -1362,7 +1279,6 @@
         
         statsArea.innerHTML = `<h3 style="font-size:12px; text-transform:uppercase; color:var(--info); margin:15px 0; font-weight:800;"><i data-feather="pie-chart" class="icon"></i> Daily Meal Builder</h3><div style="display:flex; justify-content:space-between; text-align:center; background:var(--bg); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:18px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);"><div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">REM. KCAL</div><div style="font-weight:800; font-size:16px; margin-top:4px; color:${remCal<0?'var(--danger)':'var(--text)'};">${remCal}</div></div><div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">PRO</div><div style="font-weight:800; font-size:14px; margin-top:4px; color:${remP<0?'var(--danger)':'#10b981'};">${remP}g</div></div><div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">CARB</div><div style="font-weight:800; font-size:14px; margin-top:4px; color:${remC<0?'var(--danger)':'#3b82f6'};">${remC}g</div></div><div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">FAT</div><div style="font-weight:800; font-size:14px; margin-top:4px; color:${remF<0?'var(--danger)':'#f59e0b'};">${remF}g</div></div></div>`;
         
-        // Group meals by category
         const cats = ["Meal 1 (Breakfast)", "Meal 2 (Mid-Morning)", "Meal 3 (Lunch)", "Meal 4 (Snacks)", "Meal 5 (Dinner)", "Meal 6 (Late Snack)", "Other"];
         let grouped = {};
         (c.meals || []).forEach(m => { let cat = m.cat || "Other"; if(!grouped[cat]) grouped[cat] = []; grouped[cat].push(m); });
@@ -1394,18 +1310,11 @@
         c.meals.push({ id: Date.now(), name: n, cat: cat, p: p, c: carb, f: f }); 
         
         await window.syncToCloud(); 
-        document.getElementById('mbName').value = ""; // clear input
+        document.getElementById('mbName').value = ""; 
         window.renderMealBuilder(); 
     };
 
-
-//    window.loadSplit = (splitName) => {
-  //      const cont = document.getElementById('exTagsContainer'); document.getElementById('setForm').style.display = 'none'; if(!splitName) { cont.innerHTML = ""; return; }
- //       document.getElementById('logWorkoutName').value = document.getElementById('logWorkoutName').value || splitName;
-//        let htmlStr = ""; window.workoutDB[splitName].forEach(ex => { htmlStr += `<div class="ex-tag" onclick="selSplitEx('${ex}', this)">${ex}</div>`; });
-//        cont.innerHTML = htmlStr;
-//    };
-        window.loadSplit = (splitName) => {
+    window.loadSplit = (splitName) => {
         try {
             const cont = document.getElementById('exTagsContainer'); 
             document.getElementById('setForm').style.display = 'none'; 
@@ -1413,7 +1322,6 @@
             
             document.getElementById('logWorkoutName').value = document.getElementById('logWorkoutName').value || splitName;
             
-            // 1. THE SAFETY NET: Rebuild the database if it got corrupted/deleted
             if (!window.workoutDB || typeof window.workoutDB !== 'object') {
                 window.workoutDB = {
                     "Pull (Back & Biceps)": ["Pull-ups", "Lat Pulldown", "Seated Cable Row", "Barbell Row", "Barbell Bicep Curl", "Hammer Curl"],
@@ -1424,27 +1332,22 @@
                 };
             }
             
-            // 2. Catch if a specific category is missing
             if (!window.workoutDB[splitName]) {
                 window.workoutDB[splitName] = [];
             }
 
-            // 3. Render the buttons
             let htmlStr = ""; 
             window.workoutDB[splitName].forEach(ex => { 
                 htmlStr += `<div class="ex-tag" onclick="selSplitEx('${ex}', this)">${ex}</div>`; 
             });
             cont.innerHTML = htmlStr;
 
-            // 4. Force a silent save to the cloud to permanently fix the missing data
             window.syncToCloud(); 
-
         } catch (error) {
             window.showAlert("Split Loading Error: " + error.message);
         }
     };
 
-    
     window.searchEx = (val) => {
         const resDiv = document.getElementById('searchRes'); if (!val || val.length < 2) { resDiv.style.display = 'none'; return; }
         let matches = []; let searchLower = val.toLowerCase();
@@ -1460,7 +1363,6 @@
             document.getElementById('exSearch').value = ""; 
             document.querySelectorAll('.ex-tag').forEach(e => e.classList.remove('active'));
             
-            // 1. SAFETY REPAIR: Ensure the database and Custom folder exist
             if (!window.workoutDB || typeof window.workoutDB !== 'object') {
                 window.workoutDB = { "Custom Exercises": [] };
             }
@@ -1468,7 +1370,6 @@
                 window.workoutDB["Custom Exercises"] = [];
             }
 
-            // 2. Save Custom Exercise if it doesn't exist
             if(isCustom) { 
                 let exists = false; 
                 Object.values(window.workoutDB).forEach(list => { 
@@ -1483,12 +1384,10 @@
             window.curExName = name; 
             document.getElementById('curEx').innerText = name;
             
-            // 3. SAFETY REPAIR: Ensure client and logs exist
             const c = window.clients.find(x => x.id === window.curID); 
-            if (!c) return; // Exit safely if no client is selected
+            if (!c) return; 
             if (!c.logs) c.logs = {}; 
             
-            // 4. Find previous performance data safely
             window.lastPerfData = null; 
             let dates = Object.keys(c.logs).sort().reverse(); 
             for(let d of dates) { 
@@ -1511,7 +1410,6 @@
             
             window.generateSetInputs(); 
             document.getElementById('setForm').style.display = 'block'; 
-            
         } catch (error) {
             window.showAlert("Exercise Selection Error: " + error.message);
         }
@@ -1525,12 +1423,10 @@
             window.curExName = name; 
             document.getElementById('curEx').innerText = name;
             
-            // 1. SAFETY REPAIR: Ensure client and logs exist
             const c = window.clients.find(x => x.id === window.curID); 
             if (!c) return; 
             if (!c.logs) c.logs = {};
 
-            // 2. Find previous performance data safely
             window.lastPerfData = null; 
             let dates = Object.keys(c.logs).sort().reverse(); 
             for(let d of dates) { 
@@ -1553,12 +1449,10 @@
             
             window.generateSetInputs(); 
             document.getElementById('setForm').style.display = 'block'; 
-            
         } catch (error) {
             window.showAlert("Exercise Selection Error: " + error.message);
         }
     };
-
 
     window.applyProgression = (type) => {
         if(!window.lastPerfData) return; let baseW = parseFloat(window.lastPerfData.w); let baseR = parseInt(window.lastPerfData.r); let newW = baseW; let newR = baseR;
@@ -1700,7 +1594,6 @@
 
     window.generateVIPLink = () => {
         const c = window.clients.find(x => x.id === window.curID);
-        // Generates a clean URL like: ryalfithub.github.io/?vip=1712345678
         const url = window.location.href.split('?')[0].split('#')[0] + '?vip=' + c.id; 
         
         if (navigator.clipboard && window.isSecureContext) {
@@ -1712,26 +1605,6 @@
         }
     };
 
-
-        
-        let safeBca = c.bca ? c.bca.slice(0, 10) : [];
-        
-        const payload = window.encodeToHash({ 
-            n: c.name, g: c.gender || '', a: c.age || '', h: c.height || '', 
-            bca: safeBca, tdee: c.tdee || 0, macros: c.macros || null, 
-            ex: recentEx, tName: window.trainerProfile.name 
-        });
-        
-        const url = window.location.href.split('#')[0] + '#vip=' + payload; 
-        
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(url).then(() => {
-                window.showAlert("VIP Link copied! It now automatically includes YouTube video guides for their most recent workout.");
-            }).catch(err => { prompt("Copy your VIP Link here:", url); });
-        } else {
-            prompt("Copy your VIP Link here:", url);
-        }
-    };
 </script>
 </body>
 </html>

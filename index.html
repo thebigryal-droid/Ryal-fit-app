@@ -524,34 +524,46 @@
     <div style="margin-top:20px; color:var(--text-muted); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px;"><i data-feather="loader" style="width:12px; animation:spin 2s linear infinite;"></i> Auto-Playing...</div>
 </div>
 
-<div id="vipPortal">
-    <div class="vip-card" style="text-align:center; padding-bottom:10px;">
-        <h1 id="vipName" style="font-size:28px; margin:0; letter-spacing:-1px;"></h1>
-        <div id="vipMeta" style="font-size:12px; color:var(--text-muted); margin-top:5px; font-weight:800; text-transform:uppercase;"></div>
-        <div id="vipTrainerNameSpan" style="font-size:10px; color:var(--primary); font-weight:800; margin-top:8px;"></div>
+<div id="vipPortal" style="display:none; background:var(--bg); min-height:100vh; padding:20px;">
+    
+    <div id="vipLoginBox" class="auth-card" style="margin-top:10vh; display:none;">
+        <h2>Client Portal</h2>
+        <p style="color:var(--text-muted); font-size:12px;">Enter your unique Client ID provided by your trainer.</p>
+        <input type="text" id="vipIdInput" placeholder="Client ID (e.g. 1712345678)" style="text-align:center; letter-spacing:1px; font-weight:bold; margin-bottom:15px;">
+        <button class="btn-main" onclick="loginVIP()">Access Portal</button>
     </div>
 
-    <div class="vip-card" id="vipRoutineCard" style="display:none;">
-        <h3 style="font-size:14px; color:var(--text); margin:0 0 15px 0; display:flex; align-items:center; font-weight:800;"><i data-feather="play-circle" style="color:#ef4444; margin-right:8px;"></i> Recent Routine Form Guides</h3>
-        <div id="vipRoutineLinks"></div>
-    </div>
-
-    <div class="vip-card">
-        <h3 style="font-size:14px; color:var(--text); margin:0 0 15px 0; display:flex; align-items:center; font-weight:800;"><i data-feather="target" style="color:var(--primary); margin-right:8px;"></i> Nutritional Targets</h3>
-        <div style="display:flex; justify-content:space-between; text-align:center;">
-            <div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">TDEE</div><div id="vipCal" style="font-weight:800; font-size:18px; margin-top:5px; color:var(--text);">-</div></div>
-            <div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">PRO</div><div id="vipPro" style="font-weight:800; font-size:18px; margin-top:5px; color:#10b981;">-</div></div>
-            <div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">CARB</div><div id="vipCarb" style="font-weight:800; font-size:18px; margin-top:5px; color:#3b82f6;">-</div></div>
-            <div><div style="font-size:10px; color:var(--text-muted); font-weight:800;">FAT</div><div id="vipFat" style="font-weight:800; font-size:18px; margin-top:5px; color:#f59e0b;">-</div></div>
+    <div id="vipDashboard" style="display:none; max-width:600px; margin:0 auto;">
+        
+        <div style="text-align:center; margin-bottom:25px; padding-top:20px;">
+            <h1 id="vipLiveName" style="font-size:32px; margin:0; letter-spacing:-1px;"></h1>
+            <div id="vipLiveTrainer" style="font-size:10px; color:var(--primary); font-weight:800; margin-top:5px; letter-spacing:1px;"></div>
         </div>
-    </div>
 
-    <div class="vip-card">
-        <h3 style="font-size:14px; color:var(--text); margin:0 0 15px 0; display:flex; align-items:center; font-weight:800;"><i data-feather="trending-up" style="color:var(--info); margin-right:8px;"></i> Composition Trend</h3>
-        <canvas id="vipChart" height="150"></canvas>
+        <div class="section" style="border-left: 4px solid var(--warning);">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="calendar" class="icon" style="color:var(--warning);"></i> Upcoming Session</h3>
+            <div id="vipUpcoming"></div>
+        </div>
+
+        <div class="section" style="border-left: 4px solid var(--info);">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="check-circle" class="icon" style="color:var(--info);"></i> Previous Workout</h3>
+            <div id="vipPrevious"></div>
+        </div>
+
+        <div class="section" style="border-left: 4px solid var(--primary);">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text); text-transform:uppercase;"><i data-feather="video" class="icon" style="color:var(--primary);"></i> Exercise Library</h3>
+            <input type="text" id="vipSearchLib" placeholder="Search exercises..." oninput="searchVipLibrary(this.value)">
+            <div id="vipLibResults" style="margin-top:10px; max-height:250px; overflow-y:auto;"></div>
+        </div>
+
+        <div class="section" id="vipChartSec" style="display:none;">
+            <h3 style="font-size:12px; margin:0 0 15px 0; color:var(--text);"><i data-feather="trending-up" class="icon"></i> Progress Trend</h3>
+            <canvas id="vipLiveChart" height="150"></canvas>
+        </div>
+        
     </div>
-    <div style="text-align:center; font-size:11px; color:var(--text-muted); font-weight:800; padding:20px; letter-spacing:1px;">POWERED BY RYAL FITHUB PRO (BY ABIS RIZVI)</div>
 </div>
+
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -742,56 +754,119 @@
         } catch(e) { window.showAlert("Invalid VIP Link."); }
     };
 
-    if (window.location.hash.startsWith('#vip=')) {
+    window.vipDataStore = null; 
+
+    // --- LIVE VIP PORTAL LOGIC ---
+    window.loginVIP = async (urlId) => {
+        const id = urlId || document.getElementById('vipIdInput').value.trim();
+        if(!id) return;
+        
+        document.getElementById('cloudLoader').innerText = "CONNECTING TO TRAINER...";
+        document.getElementById('cloudLoader').style.display = 'flex';
+        
+        try {
+            // Fetch live data specifically for this Client ID
+            const docSnap = await getDoc(doc(db, "vip_portals", id));
+            if(docSnap.exists()) {
+                window.vipDataStore = docSnap.data();
+                document.getElementById('vipLoginBox').style.display = 'none';
+                document.getElementById('vipDashboard').style.display = 'block';
+                window.renderLiveVIP();
+            } else {
+                window.showAlert("Invalid Client ID. Please request a new link from your trainer.");
+                document.getElementById('vipLoginBox').style.display = 'block';
+            }
+        } catch(e) { window.showAlert("Connection error."); }
+        document.getElementById('cloudLoader').style.display = 'none';
+    };
+
+    window.renderLiveVIP = () => {
+        const d = window.vipDataStore;
+        document.getElementById('vipLiveName').innerText = d.client.name;
+        document.getElementById('vipLiveTrainer').innerText = `TRAINING BY ${d.trainerName.toUpperCase()}`;
+
+        // 1. Render Upcoming Session
+        let upHtml = `<div style="color:var(--text-muted); font-size:12px;">No upcoming sessions scheduled.</div>`;
+        if (d.plans && d.plans.length > 0) {
+            let future = d.plans.sort((a,b) => new Date(a.date) - new Date(b.date)).filter(p => p.date >= window.today);
+            if(future.length > 0) {
+                let p = future[0];
+                upHtml = `<div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border);">
+                    <div style="font-weight:800; font-size:15px; color:var(--text);">${p.workout}</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px; font-weight:600;">${p.date} @ ${window.formatTime(p.time) || 'Anytime'}</div>
+                </div>`;
+            }
+        }
+        document.getElementById('vipUpcoming').innerHTML = upHtml;
+
+        // 2. Render Previous Session
+        let prevHtml = `<div style="color:var(--text-muted); font-size:12px;">No past workouts logged.</div>`;
+        if (d.client.logs) {
+            let dates = Object.keys(d.client.logs).sort().reverse();
+            if (dates.length > 0 && d.client.logs[dates[0]].length > 0) {
+                let lastDate = dates[0];
+                let exercises = d.client.logs[lastDate];
+                let exList = exercises.map(ex => {
+                    let sets = ex.sets.map(s => `${s.w}kg x ${s.r}`).join(', ');
+                    return `<div style="padding:10px 0; border-bottom:1px dashed var(--border);"><b style="color:var(--text); font-size:13px;">${ex.name}</b><div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${sets}</div></div>`;
+                }).join('');
+                prevHtml = `<div style="font-weight:800; font-size:12px; color:var(--info); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border);">${lastDate}</div>${exList}`;
+            }
+        }
+        document.getElementById('vipPrevious').innerHTML = prevHtml;
+
+        // 3. Render Progress Chart
+        if(d.client.bca && d.client.bca.length > 0) {
+            document.getElementById('vipChartSec').style.display = 'block';
+            let chartData = [...d.client.bca].reverse();
+            new Chart(document.getElementById('vipLiveChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartData.map(b => b.date),
+                    datasets: [
+                        { label: 'Weight (kg)', data: chartData.map(b => b.w), borderColor: '#94a3b8', tension: 0.4 },
+                        { label: 'Muscle (kg)', data: chartData.map(b => b.smm), borderColor: '#10b981', tension: 0.4 },
+                        { label: 'Fat (%)', data: chartData.map(b => b.pbf), borderColor: '#ef4444', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        window.searchVipLibrary(''); // Load full library initially
+        if(window.feather) window.feather.replace();
+    };
+
+    window.searchVipLibrary = (query) => {
+        let q = query.toLowerCase();
+        let libs = window.vipDataStore.videoLibrary || [];
+        let filtered = libs.filter(v => v.name.toLowerCase().includes(q) || (v.muscle && v.muscle.toLowerCase().includes(q)));
+        let htmlStr = filtered.map(v => `<a href="${v.url}" target="_blank" style="display:block; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; text-decoration:none; transition:transform 0.2s;"><div style="font-weight:700; font-size:13px; color:var(--text); display:flex; justify-content:space-between;"><span><i data-feather="youtube" style="color:#ef4444; width:14px; margin-right:5px;"></i> ${v.name}</span><i data-feather="external-link" style="width:14px; color:var(--text-muted);"></i></div><div style="font-size:10px; color:var(--text-muted); margin-top:4px; font-weight:800; text-transform:uppercase;">${v.muscle || 'General'}</div></a>`).join('');
+        document.getElementById('vipLibResults').innerHTML = htmlStr || `<div style="font-size:12px; color:var(--text-muted); padding:10px; text-align:center;">No exercises match your search.</div>`;
+        if(window.feather) window.feather.replace();
+    };
+
+    // --- THE URL ROUTER ---
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('vip')) {
+        // Hide trainer app, show VIP portal
         document.getElementById('cloudLoader').style.display = 'none';
         document.getElementById('authView').style.display = 'none';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('vipPortal').style.display = 'block';
-        window.loadVipPortal();
+        
+        let clientId = urlParams.get('vip');
+        if (clientId && clientId !== 'login') {
+             window.loginVIP(clientId); // Auto-login if ID is in URL
+        } else {
+             document.getElementById('vipLoginBox').style.display = 'block'; // Show ID input box
+        }
     } else {
+        // --- NORMAL TRAINER LOGIN ---
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                try {
-                    const docRef = doc(db, "trainers", user.uid);
-                    const docSnap = await getDoc(docRef);
-                    
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        window.trainerProfile = data.profile || null;
-                        window.clients = data.clients || [];
-                        window.shifts = data.shifts || [];
-                        window.leads = data.leads || [];
-                        window.expenses = data.expenses || [];
-                        window.plans = data.plans || [];
-                        if(data.workoutDB) window.workoutDB = data.workoutDB;
-                        window.videoLibrary = data.videoLibrary || [];
+            // ... KEEP ALL YOUR EXISTING onAuthStateChanged CODE HERE ...
 
-                        document.getElementById('cloudLoader').style.display = 'none';
-
-                        if (window.trainerProfile) { 
-                            window.initApp(); 
-                            window.render();
-                        } else { 
-                            window.showSetupForm(user); 
-                        }
-                    } else {
-                        document.getElementById('cloudLoader').style.display = 'none';
-                        window.showSetupForm(user);
-                    }
-                } catch (error) {
-                    document.getElementById('cloudLoader').style.display = 'none';
-                    window.showAlert("Database Error: " + error.message);
-                }
-            } else {
-                document.getElementById('cloudLoader').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'none';
-                document.getElementById('authView').style.display = 'flex';
-                document.getElementById('loginBlock').style.display = 'block';
-                document.getElementById('setupBlock').style.display = 'none';
-            }
-        });
-    }
 
     window.ryalSignIn = () => {
         const provider = new GoogleAuthProvider();
@@ -838,11 +913,27 @@
 
     window.syncToCloud = async () => {
         if (!currentUser) return;
-        const payload = {
-            profile: window.trainerProfile, clients: window.clients, shifts: window.shifts, leads: window.leads, expenses: window.expenses, plans: window.plans, workoutDB: window.workoutDB
-        };
-        try { await setDoc(doc(db, "trainers", currentUser.uid), payload); } catch (e) { console.error(e); }
+        const payload = { profile: window.trainerProfile, clients: window.clients, shifts: window.shifts, leads: window.leads, expenses: window.expenses, plans: window.plans, workoutDB: window.workoutDB, videoLibrary: window.videoLibrary };
+        try {
+            // Save main trainer database
+            await setDoc(doc(db, "trainers", currentUser.uid), payload);
+            
+            // MAGIC SYNC: Push live data to a separate public portal for every single client
+            const vipPromises = window.clients.map(c => {
+                const vipPayload = {
+                    trainerName: window.trainerProfile.name,
+                    client: c,
+                    plans: window.plans.filter(p => p.clientId == c.id), // Grab their specific scheduled plans
+                    videoLibrary: window.videoLibrary || [] // Give them access to your library
+                };
+                // Saves to a new Firebase folder called "vip_portals" using their Client ID as the document name
+                return setDoc(doc(db, "vip_portals", c.id.toString()), vipPayload);
+            });
+            await Promise.all(vipPromises);
+            
+        } catch (e) { console.error(e); }
     };
+
 
     window.initApp = () => {
         document.getElementById('authView').style.display = 'none';
@@ -1568,20 +1659,19 @@
     };
 
     window.generateVIPLink = () => {
-        const c = window.clients.find(x => x.id === window.curID); 
-        let recentEx = []; 
-        let dates = Object.keys(c.logs || {}).sort().reverse(); 
-        if(dates.length > 0) {
-            recentEx = c.logs[dates[0]].map(l => {
-                // Check if this exercise exists in your new Video Library
-                let libMatch = (window.videoLibrary || []).find(v => v.name.toLowerCase() === l.name.toLowerCase());
-                return { 
-                    name: l.name, 
-                    // Use your custom video if it exists, otherwise fall back to a YouTube search
-                    url: libMatch ? libMatch.url : `https://www.youtube.com/results?search_query=${encodeURIComponent(l.name + ' exercise form tutorial')}` 
-                };
-            }).slice(0, 8);
+        const c = window.clients.find(x => x.id === window.curID);
+        // Generates a clean URL like: ryalfithub.github.io/?vip=1712345678
+        const url = window.location.href.split('?')[0].split('#')[0] + '?vip=' + c.id; 
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => {
+                window.showAlert(`Live VIP Link copied for ${c.name}!\n\nClient ID: ${c.id}`);
+            }).catch(err => { prompt("Copy your VIP Link here:", url); });
+        } else {
+            prompt("Copy your VIP Link here:", url);
         }
+    };
+
 
         
         let safeBca = c.bca ? c.bca.slice(0, 10) : [];

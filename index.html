@@ -1178,21 +1178,57 @@
 
     window.renderRevenue = () => {
         let mData = {}; let todayRev = 0;
-        window.shifts.forEach(s => { let m=s.date.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].sal += s.pay||0; if(!mData[m].daily[s.date]) mData[m].daily[s.date] = {sal:0,pt:0,pen:0}; mData[m].daily[s.date].sal += s.pay||0; if(s.isLate||s.isHalfDay) { let dailyRate = (window.trainerProfile.salary || 10000) / new Date(parseInt(s.date.split('-')[0]), parseInt(s.date.split('-')[1]), 0).getDate(); let p = dailyRate * 0.5; mData[m].pen += p; mData[m].daily[s.date].pen += p; } if(s.date === window.today) todayRev += s.pay||0; });
+        window.shifts.forEach(s => { 
+            let m=s.date.slice(0,7); 
+            if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; 
+            
+            let dailyRate = (window.trainerProfile.salary || 10000) / new Date(parseInt(s.date.split('-')[0]), parseInt(s.date.split('-')[1]), 0).getDate(); 
+            let actualPay = s.pay || 0;
+            let penaltyAmount = 0;
+
+            // Backward compatibility for old logs that had full pay but were half-days
+            if ((s.isLate || s.isHalfDay) && actualPay >= dailyRate - 1) {
+                actualPay = dailyRate * 0.5;
+                penaltyAmount = dailyRate * 0.5;
+            } else if (actualPay < dailyRate && (s.status === 'Present' || s.status === 'Week Off')) {
+                penaltyAmount = dailyRate - actualPay;
+            }
+
+            mData[m].sal += actualPay; 
+            mData[m].pen += penaltyAmount;
+            
+            if(!mData[m].daily[s.date]) mData[m].daily[s.date] = {sal:0,pt:0,pen:0}; 
+            mData[m].daily[s.date].sal += actualPay; 
+            mData[m].daily[s.date].pen += penaltyAmount;
+
+            if(s.date === window.today) todayRev += actualPay; 
+        });
+        
         window.clients.forEach(c => { let pt = ((c.pay||0)/(1+(c.gst||0))*(c.ret||0))/(c.sess||1); Object.keys(c.logs || {}).forEach(d => { if(c.logs[d].length>0) { let m=d.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].pt += pt; if(!mData[m].daily[d]) mData[m].daily[d] = {sal:0,pt:0,pen:0}; mData[m].daily[d].pt += pt; if(d === window.today) todayRev += pt; } }); });
         window.expenses.forEach(e => { let m=e.date.slice(0,7); if(!mData[m]) mData[m]={sal:0,pt:0,pen:0, exp:0, daily:{}}; mData[m].exp += e.amt; });
         
         let revHtml = "";
         Object.keys(mData).sort().reverse().forEach(m => { 
-            let net = mData[m].sal + mData[m].pt - mData[m].pen - mData[m].exp; let dailyHtml = ""; let sortedDays = Object.keys(mData[m].daily).sort().reverse(); 
-            if(sortedDays.length > 0) { dailyHtml = `<div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;"><div style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Daily Breakdown (Excl. Expenses)</div>`; sortedDays.forEach(d => { let dayData = mData[m].daily[d]; let dayNet = dayData.sal + dayData.pt - dayData.pen; dailyHtml += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid var(--bg);"><span style="font-weight:600;"><i data-feather="calendar" class="icon" style="color:var(--text-muted);"></i> <span style="color:var(--text);">${d}</span></span><span style="font-weight:800; color:${dayNet < 0 ? 'var(--danger)' : 'var(--text)'};">₹${dayNet.toFixed(0)}</span></div>`; }); dailyHtml += `</div>`; } 
-            revHtml += `<div style="background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; padding:0 15px; transition:transform 0.2s; box-shadow:0 4px 10px rgba(0,0,0,0.02);" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'"><div class="rev-month" onclick="toggleGroup('rev-split-${m}', this)" style="cursor:pointer; border-bottom:none; margin-top:0; padding:15px 0;"><span style="display:flex; align-items:center; gap:10px;"><i data-feather="calendar" class="icon" style="color:var(--text-muted); width:18px; height:18px;"></i> ${m}</span><div style="display:flex; align-items:center; gap:10px;"><span style="color:${net<0?'var(--danger)':'var(--primary)'}; font-size:18px;">₹${net.toFixed(0)}</span><i data-feather="chevron-down" class="icon" style="color:var(--text-muted); transition:0.3s;"></i></div></div><div id="rev-split-${m}" class="rev-split" style="display:none; padding-bottom:15px; border-top:1px solid var(--border); margin-top:0; padding-top:15px; flex-direction:column;"><div style="display:flex; gap:15px; flex-wrap:wrap; background:var(--bg); padding:12px; border-radius:10px;"><span><i data-feather="dollar-sign" class="icon" style="color:var(--text-muted);"></i> SAL: <b style="color:var(--text);">₹${mData[m].sal.toFixed(0)}</b></span><span><i data-feather="users" class="icon" style="color:var(--text-muted);"></i> PT: <b style="color:var(--text);">₹${mData[m].pt.toFixed(0)}</b></span><span style="color:var(--danger)"><i data-feather="alert-circle" class="icon"></i> PEN: <b>-₹${mData[m].pen.toFixed(0)}</b></span><span style="color:var(--danger)"><i data-feather="credit-card" class="icon"></i> EXP: <b>-₹${mData[m].exp.toFixed(0)}</b></span></div>${dailyHtml}</div></div>`; 
+            let net = mData[m].sal + mData[m].pt - mData[m].exp; 
+            let dailyHtml = ""; let sortedDays = Object.keys(mData[m].daily).sort().reverse(); 
+            if(sortedDays.length > 0) { 
+                dailyHtml = `<div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;"><div style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Daily Breakdown (Excl. Expenses)</div>`; 
+                sortedDays.forEach(d => { 
+                    let dayData = mData[m].daily[d]; 
+                    let dayNet = dayData.sal + dayData.pt; 
+                    dailyHtml += `<div style="display:flex; justify-content:space-between; font-size:12px; padding:8px 0; border-bottom:1px solid var(--bg);"><span style="font-weight:600;"><i data-feather="calendar" class="icon" style="color:var(--text-muted);"></i> <span style="color:var(--text);">${d}</span></span><span style="font-weight:800; color:${dayNet < 0 ? 'var(--danger)' : 'var(--text)'};">₹${dayNet.toFixed(0)}</span></div>`; 
+                }); 
+                dailyHtml += `</div>`; 
+            } 
+            let grossSal = mData[m].sal + mData[m].pen;
+            revHtml += `<div style="background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; padding:0 15px; transition:transform 0.2s; box-shadow:0 4px 10px rgba(0,0,0,0.02);" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'"><div class="rev-month" onclick="toggleGroup('rev-split-${m}', this)" style="cursor:pointer; border-bottom:none; margin-top:0; padding:15px 0;"><span style="display:flex; align-items:center; gap:10px;"><i data-feather="calendar" class="icon" style="color:var(--text-muted); width:18px; height:18px;"></i> ${m}</span><div style="display:flex; align-items:center; gap:10px;"><span style="color:${net<0?'var(--danger)':'var(--primary)'}; font-size:18px;">₹${net.toFixed(0)}</span><i data-feather="chevron-down" class="icon" style="color:var(--text-muted); transition:0.3s;"></i></div></div><div id="rev-split-${m}" class="rev-split" style="display:none; padding-bottom:15px; border-top:1px solid var(--border); margin-top:0; padding-top:15px; flex-direction:column;"><div style="display:flex; gap:15px; flex-wrap:wrap; background:var(--bg); padding:12px; border-radius:10px;"><span><i data-feather="dollar-sign" class="icon" style="color:var(--text-muted);"></i> GROSS SAL: <b style="color:var(--text);">₹${grossSal.toFixed(0)}</b></span><span><i data-feather="users" class="icon" style="color:var(--text-muted);"></i> PT: <b style="color:var(--text);">₹${mData[m].pt.toFixed(0)}</b></span><span style="color:var(--danger)"><i data-feather="alert-circle" class="icon"></i> PEN: <b>-₹${mData[m].pen.toFixed(0)}</b></span><span style="color:var(--danger)"><i data-feather="credit-card" class="icon"></i> EXP: <b>-₹${mData[m].exp.toFixed(0)}</b></span></div>${dailyHtml}</div></div>`; 
         });
         document.getElementById('revView').innerHTML = revHtml || "<div style='font-size:13px; color:var(--text-muted); text-align:center; padding:10px;'>No financial data yet.</div>";
         document.getElementById('statRevenue').innerText = `₹${todayRev.toFixed(0)}`;
         document.getElementById('statSessions').innerText = window.clients.reduce((count, c) => count + (c.logs && c.logs[window.today] && c.logs[window.today].length > 0 ? 1 : 0), 0);
         document.getElementById('statShift').innerText = window.shifts.find(x => x.date === window.today)?.status || "-";
     };
+
 
     window.showAlert = (msg) => {
         return new Promise(resolve => {
@@ -1266,89 +1302,19 @@
         const [inH, inM] = inT.split(':').map(Number); const [outH, outM] = outT.split(':').map(Number); const totalMins = (outH * 60 + outM) - (inH * 60 + inM);
         let isLate = false; let isHalfDay = false;
         if (status === 'Present' && totalMins > 0) { if (totalMins <= 240) isHalfDay = true; else if (totalMins < 420) isLate = true; }
+        
         const dailyRate = (window.trainerProfile.salary || 10000) / new Date(parseInt(d.split('-')[0]), parseInt(d.split('-')[1]), 0).getDate();
-        window.shifts.push({ id: Date.now(), date: d, inTime: inT, outTime: outT, status, isLate, isHalfDay, pay: (status === 'Present' || status === 'Week Off') ? dailyRate : 0 });
+        
+        // Calculate the ACTUAL take-home pay for this shift
+        let actualPay = (status === 'Present' || status === 'Week Off') ? dailyRate : 0;
+        if (status === 'Present' && (isLate || isHalfDay)) {
+            actualPay = dailyRate * 0.5; // Dock 50%
+        }
+        
+        window.shifts.push({ id: Date.now(), date: d, inTime: inT, outTime: outT, status, isLate, isHalfDay, pay: actualPay });
         await window.syncToCloud(); window.render();
     };
 
-    window.delShift = (id) => { window.showConfirm("Delete this shift record?", async () => { window.shifts = window.shifts.filter(s => s.id !== id); await window.syncToCloud(); window.render(); }); };
-
-    window.addExpense = async () => {
-        const d = document.getElementById('expDate').value || window.today; const c = document.getElementById('expCat').value; const desc = document.getElementById('expDesc').value; const amt = parseFloat(document.getElementById('expAmt').value);
-        if(!amt || amt <= 0) { window.showAlert("Enter a valid amount"); return; }
-        window.expenses.push({ id: Date.now(), date: d, cat: c, desc: desc, amt: amt });
-        document.getElementById('expDesc').value = ""; document.getElementById('expAmt').value = ""; await window.syncToCloud(); window.render();
-    };
-
-    window.delExpense = (id) => { window.showConfirm("Delete expense?", async () => { window.expenses = window.expenses.filter(e => e.id !== id); await window.syncToCloud(); window.render(); }); };
-
-    window.regClient = async () => {
-        const name = document.getElementById('regName').value; if(!name) { window.showAlert("Name required"); return; }
-        window.clients.push({ id: Date.now(), name, phone: document.getElementById('regPhone').value, gender: document.getElementById('regGender').value, age: document.getElementById('regAge').value, height: document.getElementById('regHeight').value, receipt: document.getElementById('regReceipt').value, slot: document.getElementById('regSlot').value, level: document.getElementById('regLevel').value, med: document.getElementById('regMed').value, startDate: document.getElementById('regStart').value, endDate: document.getElementById('regEnd').value, prof: document.getElementById('regProf').value, pay: parseFloat(document.getElementById('regPay').value) || 0, sess: parseInt(document.getElementById('regSess').value) || 1, gst: parseFloat(document.getElementById('regGst').value) || 0, ret: parseFloat(document.getElementById('regRet').value) || 0.4, logs: {}, bca: [], meals: [], gallery: [], cardio: [] });
-        await window.syncToCloud(); window.showAlert("Client Registered!"); window.render();
-    };
-
-    window.openOv = (id) => {
-        window.curID = id; const c = window.clients.find(x => x.id === id);
-        if(!c.meals) c.meals = []; if(!c.gallery) c.gallery = []; if(!c.bca) c.bca = []; if(!c.logs) c.logs = {}; if(!c.cardio) c.cardio = [];
-        document.getElementById('clientOverlay').style.display = 'block'; document.getElementById('clientMenu').style.display = 'none'; document.getElementById('ovEditForm').style.display = 'none';
-        document.getElementById('aiOutputBox').style.display = 'none';
-        
-        document.getElementById('ovName').innerText = c.name;
-        let phoneUI = c.phone ? `<span style="color:var(--info);"><i data-feather="phone" class="icon"></i> ${c.phone}</span> | ` : '';
-        document.getElementById('ovTags').innerHTML = `${phoneUI}${c.gender || 'N/A'} | ${c.age?c.age+'Yrs':'-'} | ${c.height?c.height+'cm':'-'} | ${c.prof || 'General'}`;
-        document.getElementById('ovReceipt').innerText = c.receipt ? `Rec: ${c.receipt} ${c.slot?'| '+window.formatTime(c.slot):''} | Valid: ${c.startDate||'?'} to ${c.endDate||'?'}` : '';
-        const medBox = document.getElementById('ovMed'); if(c.med && c.med.toLowerCase() !== "none") { medBox.innerHTML = `<i data-feather="alert-triangle" class="icon" style="margin-right:8px;"></i> ALERT: ${c.med}`; medBox.style.display = 'flex'; } else medBox.style.display = 'none';
-        
-        document.getElementById('bcaDate').value = window.today; 
-        document.getElementById('cardioDate').value = window.today;
-        document.getElementById('scoutEngine').style.display = "none";
-        document.getElementById('logWorkoutName').value = ""; document.getElementById('splitSelect').value = ""; document.getElementById('exTagsContainer').innerHTML = ""; document.getElementById('setForm').style.display = 'none';
-        if(c.bca && c.bca.length > 0) { 
-            const r = c.bca[0]; document.getElementById('inWeight').value = r.w||""; document.getElementById('inSmm').value = r.smm||""; document.getElementById('inPbf').value = r.pbf||""; document.getElementById('inBmi').value = r.bmi||""; document.getElementById('inScore').value = r.score||""; document.getElementById('inVisFat').value = r.visFat||""; document.getElementById('inBmr').value = r.bmr||""; 
-        } else { document.querySelectorAll('#inWeight,#inSmm,#inPbf,#inBmi,#inScore,#inVisFat,#inBmr').forEach(el => { if(el) el.value=""; }); }
-        
-        window.renderMealBuilder(); 
-        window.renderGallery(); 
-        window.renderBcaHistory(); 
-        window.renderTonnageChart(); 
-        window.renderCardio();
-        feather.replace();
-    };
-
-    window.toggleHistory = (id) => { const row = document.getElementById(`hist-${id}`); row.style.display = row.style.display === 'none' ? 'table-row' : 'none'; };
-    
-    window.delLog = (cId, date, logId) => { window.showConfirm("Delete exercise?", async () => { const c = window.clients.find(x => x.id === cId); c.logs[date] = c.logs[date].filter(l => l.id !== logId); if (c.logs[date].length === 0) delete c.logs[date]; await window.syncToCloud(); window.render(); }); };
-
-    window.showEditForm = () => {
-        document.getElementById('clientMenu').style.display = 'none'; const c = window.clients.find(x => x.id === window.curID);
-        document.getElementById('editName').value = c.name || ""; document.getElementById('editPhone').value = c.phone || "";
-        document.getElementById('editGender').value = c.gender || "Other"; document.getElementById('editAge').value = c.age || "";
-        document.getElementById('editHeight').value = c.height || ""; document.getElementById('editSlot').value = c.slot || "";
-        document.getElementById('editReceipt').value = c.receipt || ""; document.getElementById('editSess').value = c.sess || "";
-        document.getElementById('editEnd').value = c.endDate || ""; document.getElementById('editMed').value = c.med || "";
-        document.getElementById('ovEditForm').style.display = 'block';
-    };
-
-    window.saveClientEdit = async () => {
-        const c = window.clients.find(x => x.id === window.curID);
-        c.name = document.getElementById('editName').value || c.name; c.phone = document.getElementById('editPhone').value || ""; c.gender = document.getElementById('editGender').value || c.gender; c.age = document.getElementById('editAge').value || ""; c.height = document.getElementById('editHeight').value || ""; c.slot = document.getElementById('editSlot').value || ""; c.receipt = document.getElementById('editReceipt').value || ""; c.sess = parseInt(document.getElementById('editSess').value) || c.sess; c.endDate = document.getElementById('editEnd').value || ""; c.med = document.getElementById('editMed').value || "";
-        await window.syncToCloud(); document.getElementById('ovEditForm').style.display = 'none'; window.openOv(window.curID); window.render(); 
-    };
-
-    window.deleteCurrentClient = () => { window.showConfirm("DANGER: Permanently delete client?", async () => { window.clients = window.clients.filter(c => c.id !== window.curID); await window.syncToCloud(); document.getElementById('clientOverlay').style.display = 'none'; window.render(); }); };
-
-    window.sendWaReminder = () => {
-        const c = window.clients.find(x => x.id === window.curID);
-        let title = c.gender === 'Female' ? "Ma'am" : (c.gender === 'Male' ? "Sir" : ""); let greeting = title ? `Hello ${title},` : `Hello ${c.name},`; let timeStr = c.slot ? ` at *${window.formatTime(c.slot)}*` : ``; let msg = `${greeting}\n\nThis is a gentle reminder for your upcoming personal training session${timeStr}. \n\nSee you for your session! 💪\n- ${window.trainerProfile.name.split(' ')[0]}`;
-        let cleanPhone = c.phone ? c.phone.replace(/[^0-9]/g, '') : ''; let link = (cleanPhone && cleanPhone.length >= 10) ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`; window.open(link);
-    };
-
-    // --- GALLERY TIMELINE & AUTO SLIDESHOW LOGIC ---
-    window.uploadToGallery = (event) => {
-        const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
-        reader.onload = function(e) { const img = new Image(); img.onload = async function() { const canvas = document.createElement('canvas'); const scaleSize = 300 / img.width; canvas.width = 300; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); const c = window.clients.find(x => x.id === window.curID); if(!c.gallery) c.gallery = []; c.gallery.push({ id: Date.now(), date: document.getElementById('gallerySearchDate').value || window.today, img: canvas.toDataURL('image/jpeg', 0.6) }); c.gallery.sort((a,b) => new Date(b.date) - new Date(a.date)); await window.syncToCloud(); window.renderGallery(); }; img.src = e.target.result; }; reader.readAsDataURL(file);
-    };
 
     window.renderGallery = () => {
         const c = window.clients.find(x => x.id === window.curID); const grid = document.getElementById('galleryGrid');
@@ -1716,12 +1682,27 @@
         let clientRowsHtml = ''; let sr = 1; let totalPtEarnedThisMonth = 0;
         window.clients.forEach(c => { let doneThisMonth = Object.keys(c.logs || {}).filter(d => d.startsWith(mStr)).length; let doneTotal = Object.keys(c.logs || {}).length; if(doneThisMonth > 0 || (c.startDate && c.startDate.startsWith(mStr))) { let remSess = Math.max(0, (c.sess || 0) - doneTotal); let amtPerSess = ((c.pay||0)/(1+(c.gst||0))*(c.ret||0))/(c.sess||1); let earnedThisMonth = amtPerSess * doneThisMonth; totalPtEarnedThisMonth += earnedThisMonth; clientRowsHtml += `<tr><td>${sr++}</td><td><b>${c.name}</b></td><td>${c.receipt || '-'}</td><td>₹${c.pay || 0}</td><td>${c.startDate || '-'}</td><td>${c.endDate || '-'}</td><td>${c.sess || 0}</td><td style="background:#3b82f6; color:white; font-weight:bold;">${doneThisMonth}</td><td>${remSess}</td><td>₹${amtPerSess.toFixed(2)}</td><td style="color:#3b82f6; font-weight:bold;">₹${earnedThisMonth.toFixed(2)}</td></tr>`; } });
         if(clientRowsHtml === '') clientRowsHtml = `<tr><td colspan="11" style="text-align:center; padding:20px; color:#86868b;">No active client sessions recorded for this month.</td></tr>`;
+        
         let shiftRowsHtml = ''; let daysWorked = 0; let daysLate = 0; let daysWeekOff = 0; let daysAbsent = 0; let totalSalEarned = 0;
-        window.shifts.filter(s => s.date.startsWith(mStr)).sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => { if(s.status === 'Present') daysWorked++; if(s.isLate) daysLate++; if(s.status === 'Week Off') daysWeekOff++; if(s.status === 'Absent') daysAbsent++; let hrs = 0; if(s.inTime && s.outTime) { let [inH, inM] = s.inTime.split(':').map(Number); let [outH, outM] = s.outTime.split(':').map(Number); hrs = ((outH * 60 + outM) - (inH * 60 + inM)) / 60; } totalSalEarned += (s.pay || 0); let statusLabel = s.status; if(s.isLate) statusLabel += ' (Late)'; if(s.isHalfDay) statusLabel += ' (Half Day)'; shiftRowsHtml += `<tr><td>${s.date}</td><td>${statusLabel}</td><td>${window.formatTime(s.inTime) || '-'}</td><td>${window.formatTime(s.outTime) || '-'}</td><td>${hrs.toFixed(1)} hrs</td><td>₹${(s.pay || 0).toFixed(2)}</td></tr>`; });
+        window.shifts.filter(s => s.date.startsWith(mStr)).sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => { 
+            if(s.status === 'Present') daysWorked++; if(s.isLate) daysLate++; if(s.status === 'Week Off') daysWeekOff++; if(s.status === 'Absent') daysAbsent++; 
+            let hrs = 0; if(s.inTime && s.outTime) { let [inH, inM] = s.inTime.split(':').map(Number); let [outH, outM] = s.outTime.split(':').map(Number); hrs = ((outH * 60 + outM) - (inH * 60 + inM)) / 60; } 
+            
+            // Fix for old logs on the PDF
+            let dailyRate = (window.trainerProfile.salary || 10000) / new Date(parseInt(s.date.split('-')[0]), parseInt(s.date.split('-')[1]), 0).getDate();
+            let actualPay = s.pay || 0;
+            if ((s.isLate || s.isHalfDay) && actualPay >= dailyRate - 1) { actualPay = dailyRate * 0.5; }
+            totalSalEarned += actualPay; 
+            
+            let statusLabel = s.status; if(s.isLate) statusLabel += ' (Late)'; if(s.isHalfDay) statusLabel += ' (Half Day)'; 
+            shiftRowsHtml += `<tr><td>${s.date}</td><td>${statusLabel}</td><td>${window.formatTime(s.inTime) || '-'}</td><td>${window.formatTime(s.outTime) || '-'}</td><td>${hrs.toFixed(1)} hrs</td><td>₹${actualPay.toFixed(2)}</td></tr>`; 
+        });
+        
         if(shiftRowsHtml === '') shiftRowsHtml = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#86868b;">No attendance shifts logged for this month.</td></tr>`;
         let expRowsHtml = ''; let totalExpThisMonth = 0;
         window.expenses.filter(e => e.date.startsWith(mStr)).sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => { totalExpThisMonth += e.amt; expRowsHtml += `<tr><td>${e.date}</td><td><b>${e.cat}</b></td><td>${e.desc || '-'}</td><td style="color:#ef4444; font-weight:bold;">₹${e.amt.toFixed(2)}</td></tr>`; });
         if(expRowsHtml === '') expRowsHtml = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#86868b;">No expenses logged for this month.</td></tr>`;
+        
         let finalNet = (totalPtEarnedThisMonth + totalSalEarned) - totalExpThisMonth;
         let printWindow = window.open('', '_blank');
         
@@ -1741,6 +1722,7 @@
         printWindow.document.write(htmlString);
         printWindow.document.close();
     };
+
 
     window.generateProgressPDF = () => {
         const c = window.clients.find(x => x.id === window.curID); 
